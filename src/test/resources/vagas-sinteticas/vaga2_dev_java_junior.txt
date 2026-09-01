@@ -1,0 +1,24 @@
+Desenvolvedor Backend Java Júnior
+
+Sobre a vaga
+Nosso time de engenharia procura uma pessoa desenvolvedora júnior para atuar na
+construção e manutenção de APIs que sustentam nossos produtos internos.
+
+Responsabilidades
+- Desenvolver e manter APIs REST.
+- Escrever testes automatizados das funcionalidades entregues.
+- Participar das revisões de código do time.
+- Apoiar na correção de bugs e na melhoria contínua dos serviços.
+
+Requisitos
+- Java 17 ou superior.
+- Spring Boot.
+- Banco de dados relacional, preferencialmente Postgres.
+- Versionamento com Git.
+- Maven ou Gradle.
+
+Diferenciais
+- Docker e Docker Compose.
+- Experiência com testes usando JUnit e Mockito.
+- Noções de front-end com JS ou React.
+- Vivência com alguma cloud (AWS, Azure ou GCP).
