@@ -48,7 +48,8 @@ public class TechnologyDictionary {
         if (text == null || text.isEmpty()) {
             return List.of();
         }
-        String haystack = TextNormalizer.normalize(text);
+        TextNormalizer.Normalized normalized = TextNormalizer.map(text);
+        String haystack = normalized.value();
         boolean[] consumed = new boolean[haystack.length()];
         List<TermOccurrence> found = new ArrayList<>();
 
@@ -59,8 +60,11 @@ public class TechnologyDictionary {
                 int end = start + form.normalized().length();
                 if (isFree(consumed, start, end) && hasBoundaries(haystack, start, end)) {
                     markConsumed(consumed, start, end);
-                    found.add(new TermOccurrence(
-                            form.canonical(), text.substring(start, end), start, end));
+                    int originalStart = normalized.originalStart(start);
+                    int originalEnd = normalized.originalEnd(end);
+                    found.add(new TermOccurrence(form.canonical(),
+                            text.substring(originalStart, originalEnd),
+                            originalStart, originalEnd));
                 }
                 from = start + 1;
             }
@@ -95,14 +99,19 @@ public class TechnologyDictionary {
         }
     }
 
+    /**
+     * O termo so vale se nenhum dos lados encostar em letra ou digito.
+     *
+     * A checagem vale inclusive para termos que comecam com pontuacao, senao
+     * ".net" seria encontrado dentro do dominio "empresa.net". O ".NET" escrito
+     * em "ASP.NET" continua sendo reconhecido, mas pelo alias "asp.net", nao
+     * pelo pedaco solto.
+     */
     private static boolean hasBoundaries(String text, int start, int end) {
-        boolean startsWithWordChar = Character.isLetterOrDigit(text.charAt(start));
-        if (startsWithWordChar && start > 0 && Character.isLetterOrDigit(text.charAt(start - 1))) {
+        if (start > 0 && Character.isLetterOrDigit(text.charAt(start - 1))) {
             return false;
         }
-        boolean endsWithWordChar = Character.isLetterOrDigit(text.charAt(end - 1));
-        return !(endsWithWordChar && end < text.length()
-                && Character.isLetterOrDigit(text.charAt(end)));
+        return end >= text.length() || !Character.isLetterOrDigit(text.charAt(end));
     }
 
     private static Map<String, List<String>> defaultTechnologies() {

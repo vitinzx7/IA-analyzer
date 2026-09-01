@@ -2,6 +2,7 @@ package com.resumematch.dictionary;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.text.Normalizer;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -89,5 +90,40 @@ class TechnologyDictionaryTest {
     void pacoteOfficeSozinhoContinuaSendoMicrosoftOffice() {
         assertThat(technologiesIn("Pacote Office / ferramentas corporativas"))
                 .containsExactly("Microsoft Office");
+    }
+
+    @Test
+    void dominioTerminadoEmNetNaoViraTecnologia() {
+        assertThat(technologiesIn("Portfolio em https://empresa.net/vagas")).isEmpty();
+        assertThat(technologiesIn("Acesse www.minhaempresa.net hoje")).isEmpty();
+    }
+
+    @Test
+    void continuaEncontrandoDotNetEscritoComoTecnologia() {
+        assertThat(technologiesIn("Desenvolvimento com .NET")).containsExactly(".NET");
+        assertThat(technologiesIn("Experiencia em ASP.NET Core")).containsExactly(".NET");
+    }
+
+    @Test
+    void recortaEvidenciaCorretaEmTextoDecomposto() {
+        String decomposto = Normalizer.normalize(
+                "Manutenção de containers Docker", Normalizer.Form.NFD);
+
+        List<TermOccurrence> found = dictionary.findIn(decomposto);
+
+        assertThat(found).singleElement().satisfies(o -> {
+            assertThat(o.technology()).isEqualTo("Docker");
+            assertThat(o.matchedText()).isEqualTo("Docker");
+            assertThat(decomposto.substring(o.start(), o.end())).isEqualTo("Docker");
+        });
+    }
+
+    @Test
+    void recortaEvidenciaCorretaQuandoOAcentoVemAntesDoTermo() {
+        String texto = "Configuração Docker e manutenção PostgreSQL";
+
+        assertThat(dictionary.findIn(texto))
+                .extracting(o -> texto.substring(o.start(), o.end()))
+                .containsExactly("Docker", "PostgreSQL");
     }
 }
