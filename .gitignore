@@ -9,6 +9,7 @@ target/
 *.csv
 src/test/resources/curriculos/
 .env
+CLAUDE.md
 
 ### STS ###
 .apt_generated
