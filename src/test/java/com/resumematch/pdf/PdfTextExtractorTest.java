@@ -26,15 +26,11 @@ class PdfTextExtractorTest {
     private final PdfTextExtractor extractor = new PdfTextExtractor();
 
     @Test
-    void imprimeTextoExtraidoDoCurriculo() {
+    void extraiTextoDoCurriculoDisponivel() {
         File pdf = anyResume().orElseGet(
                 () -> abort("Nenhum PDF em " + CURRICULOS + ", teste ignorado"));
 
         String text = extractor.extract(pdf);
-
-        System.out.println("========== " + pdf.getName() + " ==========");
-        System.out.println(text);
-        System.out.println("========== " + text.length() + " caracteres ==========");
 
         assertThat(text).isNotBlank();
     }
