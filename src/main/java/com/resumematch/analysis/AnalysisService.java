@@ -27,6 +27,7 @@ public final class AnalysisService {
     private final RequirementMatcher matcher;
     private final ScoreCalculator scoreCalculator;
     private final SummaryGenerator summaryGenerator;
+    private final AnalysisLog analysisLog;
 
     public AnalysisService(PdfTextExtractor pdfTextExtractor,
             SentenceSplitter sentenceSplitter,
@@ -34,12 +35,24 @@ public final class AnalysisService {
             RequirementMatcher matcher,
             ScoreCalculator scoreCalculator,
             SummaryGenerator summaryGenerator) {
+        this(pdfTextExtractor, sentenceSplitter, requirementExtractor, matcher,
+                scoreCalculator, summaryGenerator, AnalysisLog.NONE);
+    }
+
+    public AnalysisService(PdfTextExtractor pdfTextExtractor,
+            SentenceSplitter sentenceSplitter,
+            JobRequirementExtractor requirementExtractor,
+            RequirementMatcher matcher,
+            ScoreCalculator scoreCalculator,
+            SummaryGenerator summaryGenerator,
+            AnalysisLog analysisLog) {
         this.pdfTextExtractor = pdfTextExtractor;
         this.sentenceSplitter = sentenceSplitter;
         this.requirementExtractor = requirementExtractor;
         this.matcher = matcher;
         this.scoreCalculator = scoreCalculator;
         this.summaryGenerator = summaryGenerator;
+        this.analysisLog = analysisLog == null ? AnalysisLog.NONE : analysisLog;
     }
 
     public AnalysisResult analyze(String resumeText, String jobText) {
@@ -50,7 +63,9 @@ public final class AnalysisService {
         List<RequirementMatch> matches = matcher.match(requirements, resumeText, sentences);
         double score = scoreCalculator.calculate(matches);
         String summary = summaryGenerator.generate(matches, score);
-        return new AnalysisResult(score, matches, summary);
+        AnalysisResult result = new AnalysisResult(score, matches, summary);
+        analysisLog.log(result);
+        return result;
     }
 
     public AnalysisResult analyzePdf(InputStream pdf, String origin, String jobText) {

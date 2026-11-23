@@ -7,6 +7,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -27,9 +29,9 @@ import com.resumematch.pdf.PdfTextExtractor;
 
 class AnalysisServiceTest {
 
-    private final AnalysisService service = service();
+    private final AnalysisService service = service(AnalysisLog.NONE);
 
-    private AnalysisService service() {
+    private AnalysisService service(AnalysisLog log) {
         TechnologyDictionary dictionary = new TechnologyDictionary();
         return new AnalysisService(
                 new PdfTextExtractor(),
@@ -37,7 +39,8 @@ class AnalysisServiceTest {
                 new JobRequirementExtractor(dictionary),
                 new RequirementMatcher(dictionary),
                 new ScoreCalculator(),
-                new LocalSummaryGenerator());
+                new LocalSummaryGenerator(),
+                log);
     }
 
     @Test
@@ -86,6 +89,17 @@ class AnalysisServiceTest {
                 "Desenvolvi uma API.", "x".repeat(AnalysisService.MAX_JOB_CHARS + 1)))
                 .isInstanceOf(AnalysisException.class)
                 .hasMessageContaining("muito longa");
+    }
+
+    @Test
+    void registraResultadoNoLog() {
+        List<AnalysisResult> logged = new ArrayList<>();
+        AnalysisService loggedService = service(logged::add);
+
+        loggedService.analyze("Desenvolvi uma API em Java.", "Java");
+
+        assertThat(logged).hasSize(1);
+        assertThat(logged.getFirst().requirements()).hasSize(1);
     }
 
     @Test
