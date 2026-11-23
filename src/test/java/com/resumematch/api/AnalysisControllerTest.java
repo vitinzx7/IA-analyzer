@@ -64,6 +64,22 @@ class AnalysisControllerTest {
     }
 
     @Test
+    void rejeitaJsonMalformado() throws Exception {
+        mockMvc.perform(post("/api/analyze/text")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{nao e json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("O corpo da requisicao nao e um JSON valido."));
+    }
+
+    @Test
+    void devolveNotFoundParaRotaInexistente() throws Exception {
+        mockMvc.perform(get("/api/nao-existe"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("A rota solicitada nao existe."));
+    }
+
+    @Test
     void rejeitaArquivoQueNaoEhPdf() throws Exception {
         mockMvc.perform(multipart("/api/analyze")
                 .file(new MockMultipartFile("resume", "cv.pdf", "application/pdf",

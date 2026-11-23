@@ -5,12 +5,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.resumematch.analysis.AnalysisException;
 import com.resumematch.pdf.PdfExtractionException;
@@ -40,6 +42,18 @@ public class ApiExceptionHandler {
     public ProblemDetail handleMultipart(MultipartException exception) {
         return problem(HttpStatus.BAD_REQUEST, "Upload invalido",
                 "Nao foi possivel ler o formulario enviado.");
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleMalformedJson(HttpMessageNotReadableException exception) {
+        return problem(HttpStatus.BAD_REQUEST, "JSON invalido",
+                "O corpo da requisicao nao e um JSON valido.");
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ProblemDetail handleNotFound(NoResourceFoundException exception) {
+        return problem(HttpStatus.NOT_FOUND, "Recurso nao encontrado",
+                "A rota solicitada nao existe.");
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
