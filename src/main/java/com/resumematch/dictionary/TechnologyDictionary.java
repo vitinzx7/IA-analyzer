@@ -100,18 +100,35 @@ public class TechnologyDictionary {
     }
 
     /**
-     * O termo so vale se nenhum dos lados encostar em letra ou digito.
+     * O termo so vale se nenhum dos lados encostar em letra.
      *
-     * A checagem vale inclusive para termos que comecam com pontuacao, senao
-     * ".net" seria encontrado dentro do dominio "empresa.net". O ".NET" escrito
-     * em "ASP.NET" continua sendo reconhecido, mas pelo alias "asp.net", nao
-     * pelo pedaco solto.
+     * A direita, uma sequencia de digitos e aceita quando termina em algo que
+     * nao e letra: assim "Java21" e "C++11" sao reconhecidos, mas "Java2EE"
+     * nao. A checagem vale inclusive para termos que comecam com pontuacao,
+     * senao ".net" seria encontrado dentro do dominio "empresa.net". O ".NET"
+     * escrito em "ASP.NET" continua sendo reconhecido, mas pelo alias
+     * "asp.net", nao pelo pedaco solto.
      */
     private static boolean hasBoundaries(String text, int start, int end) {
         if (start > 0 && Character.isLetterOrDigit(text.charAt(start - 1))) {
             return false;
         }
-        return end >= text.length() || !Character.isLetterOrDigit(text.charAt(end));
+        if (end >= text.length()) {
+            return true;
+        }
+        char next = text.charAt(end);
+        if (Character.isLetter(next)) {
+            return false;
+        }
+        if (Character.isDigit(next)) {
+            int afterVersion = end;
+            while (afterVersion < text.length() && Character.isDigit(text.charAt(afterVersion))) {
+                afterVersion++;
+            }
+            return afterVersion >= text.length()
+                    || !Character.isLetter(text.charAt(afterVersion));
+        }
+        return true;
     }
 
     private static Map<String, List<String>> defaultTechnologies() {

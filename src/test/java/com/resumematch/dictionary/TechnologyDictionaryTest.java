@@ -126,4 +126,15 @@ class TechnologyDictionaryTest {
                 .extracting(o -> texto.substring(o.start(), o.end()))
                 .containsExactly("Docker", "PostgreSQL");
     }
+
+    @Test
+    void reconheceVersaoColadaNoNome() {
+        assertThat(technologiesIn("Projetos em C++11, Java21, Python3 e Windows11"))
+                .containsExactlyInAnyOrder("C++", "Java", "Python", "Windows");
+    }
+
+    @Test
+    void naoReconheceTermoQuandoVersaoColadaContinuaComLetra() {
+        assertThat(technologiesIn("Trabalhei com Java2EE")).isEmpty();
+    }
 }
