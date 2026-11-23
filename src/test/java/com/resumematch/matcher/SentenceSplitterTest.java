@@ -69,6 +69,12 @@ class SentenceSplitterTest {
     }
 
     @Test
+    void naoQuebraNomeDeTecnologiaComPonto() {
+        assertThat(sentences("Desenvolvi com Node.js e ASP.NET."))
+                .containsExactly("Desenvolvi com Node.js e ASP.NET.");
+    }
+
+    @Test
     void guardaIntervaloDoTextoOriginal() {
         String text = "Desenvolvi uma API.\nUsei Docker.";
         List<Sentence> result = splitter.split(text);

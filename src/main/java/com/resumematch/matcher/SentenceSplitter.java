@@ -153,9 +153,46 @@ public final class SentenceSplitter {
         if (c != '.' && c != '!' && c != '?' && c != ';') {
             return false;
         }
-        return c != '.' || i == 0 || i + 1 >= text.length()
-                || !Character.isDigit(text.charAt(i - 1))
-                || !Character.isDigit(text.charAt(i + 1));
+        if (c != '.') {
+            return true;
+        }
+        if (i > 0 && i + 1 < text.length()
+                && Character.isDigit(text.charAt(i - 1))
+                && Character.isDigit(text.charAt(i + 1))) {
+            return false;
+        }
+        return !isDottedName(text, i);
+    }
+
+    /**
+     * Nomes como "Node.js" e "ASP.NET" tem ponto no meio. Um ponto seguido de
+     * um trecho curto, todo em minusculas ou todo em maiusculas, e tratado como
+     * parte do nome; "fim.Tambem" continua sendo separador.
+     */
+    private boolean isDottedName(String text, int dot) {
+        int end = dot + 1;
+        while (end < text.length()) {
+            char c = text.charAt(end);
+            if (Character.isWhitespace(c) || c == '.' || c == '!' || c == '?' || c == ';') {
+                break;
+            }
+            end++;
+        }
+        int length = end - dot - 1;
+        if (length == 0 || length > 4) {
+            return false;
+        }
+        boolean lower = true;
+        boolean upper = true;
+        for (int i = dot + 1; i < end; i++) {
+            char c = text.charAt(i);
+            if (!Character.isLetter(c)) {
+                return false;
+            }
+            lower &= Character.isLowerCase(c);
+            upper &= Character.isUpperCase(c);
+        }
+        return lower || upper;
     }
 
     private void addSentence(List<Sentence> result, String text, int[] source, int from, int to) {
