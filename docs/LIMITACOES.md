@@ -3,9 +3,10 @@
 Problemas identificados e **não** resolvidos, com o motivo de não terem sido
 resolvidos. Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: Bloco 2.
+Última atualização: Bloco 8.
 
-Estado: `ABERTA` (não tratada) · `RESOLVIDA` (com o bloco que resolveu).
+Estado: `ABERTA` (não tratada) · `MITIGADA` (tratada em parte) ·
+`RESOLVIDA` (com o bloco que resolveu).
 
 ---
 
@@ -32,14 +33,16 @@ evidência.
 
 ---
 
-## L2 — Requisito fora do dicionário não é contado · ABERTA
+## L2 — Requisito fora do dicionário não é contado · MITIGADA no Bloco 7
 
 O denominador da fórmula de score só inclui requisitos reconhecidos, então o
 score pode inflar artificialmente numa vaga que peça tecnologias desconhecidas
 pelo sistema.
 
-**Mitigação prevista** (Bloco 7 e 8): mostrar na tela quantos requisitos foram
-identificados e documentar a limitação no README.
+**Mitigação implementada:** a interface mostra quantos requisitos foram
+reconhecidos e o README documenta a limitação. O denominador continua sendo
+apenas o que o dicionário conhece; requisitos desconhecidos seguem sem entrar
+no cálculo.
 
 ---
 
@@ -131,23 +134,22 @@ normalizado ao trecho do original que o gerou.
 
 ---
 
-## L8 — "Spring Boot" não satisfaz uma vaga que peça "Spring" · ABERTA
+## L8 — "Spring Boot" não satisfaz uma vaga que peça "Spring" · RESOLVIDA no Bloco 3
 
 `spring` é alias de Spring Framework e `Spring Boot` é canônico separado. Como
 o termo mais longo vence e consome a região, um currículo que diga apenas
-"Spring Boot" **não** casa com uma vaga que peça "Spring".
+"Spring Boot" **não** casava com uma vaga que peça "Spring".
+
+Resolvido com equivalência unidirecional em `TechnologyEquivalence`: Spring Boot
+satisfaz Spring Framework, mas Spring Framework não satisfaz Spring Boot. A
+assimetria preserva a distinção de quem pediu a ferramenta específica. Ver D6.
 
 Verificado:
 
 ```
-[Experiencia com Spring Boot]     -> [Spring Boot]
-[Experiencia com Spring]          -> [Spring Framework]
-[Spring Framework e Spring Boot]  -> [Spring Framework, Spring Boot]
+[Spring Boot]      + requisito Spring Framework -> MATCH
+[Spring Framework] + requisito Spring Boot      -> MISSING
 ```
-
-Não foi decidido se isso é o comportamento desejado. Semanticamente, quem usa
-Spring Boot usa Spring; mas tratá-los como equivalentes apagaria a distinção em
-vagas que peçam Spring Framework puro. **Precisa de decisão do usuário.**
 
 ---
 
@@ -173,10 +175,10 @@ candidato errado; L10 é sobre a **irreversibilidade** da escolha.
 
 ---
 
-## L11 — Versão colada ao nome não é reconhecida · ABERTA
+## L11 — Versão colada ao nome não é reconhecida · RESOLVIDA no Bloco 3
 
-A checagem de borda simétrica rejeita o termo quando ele encosta em dígito.
-Verificado:
+A checagem de borda simétrica rejeitava o termo quando ele encostava em dígito.
+Verificado antes da correção:
 
 ```
 [Projetos em C++11]      -> []          [Projetos em C++ 11]      -> [C++]
@@ -190,7 +192,6 @@ da correção da borda simétrica, porque o lado direito não era checado quando
 termo terminava em pontuação. Os casos `Java21`, `Python3` e `Windows11` já
 eram rejeitados antes e **não** são regressão.
 
-Não corrigida: as fixtures atuais escrevem sempre com espaço ("Windows 11",
-"Java 21"), então o impacto real é desconhecido. Corrigir exigiria relaxar a
-borda ao lado de dígitos, o que reabriria o risco de falso positivo que a
-checagem simétrica fechou.
+Resolvido aceitando uma sequência de dígitos à direita somente quando ela não é
+seguida por letra: `Java21` e `C++11` casam, `Java2EE` continua rejeitado. A
+borda à esquerda e o caso `JavaScript` não mudaram.

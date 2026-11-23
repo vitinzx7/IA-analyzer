@@ -3,13 +3,14 @@
 Decisões que já foram tomadas e não devem ser rediscutidas sem evidência nova.
 Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: Bloco 2.
+Última atualização: Bloco 8.
 
 ---
 
 ## D1 — Regra de classificação MATCH / PARTIAL / MISSING
 
-A implementar no Bloco 3, pelo desenvolvedor humano.
+Implementado no Bloco 3 (`SentenceSplitter`, `ActionVerbs`,
+`RequirementMatcher`).
 
 A unidade de análise é a **frase**. Não existe critério de "proximidade" nem
 janela de N palavras, por não serem implementáveis sem virar um número
@@ -73,7 +74,7 @@ Reabrir o ponto caso seja apresentada.
 
 ## D2 — Tratamento de quebra de linha
 
-A implementar no Bloco 3.
+Implementado no Bloco 3 (`SentenceSplitter`).
 
 **Passada 1, remontar parágrafos.** Junta a linha com a seguinte usando um
 espaço, exceto quando a linha termina em `.`, `!` ou `?`, ou a próxima começa
@@ -114,6 +115,83 @@ usuário em todos os commits.
 
 O `CLAUDE.md` fica no `.gitignore`, por decisão do usuário, para não ficar
 visível aos revisores e não influenciar o review.
+
+---
+
+## D6 — Equivalências unidirecionais entre tecnologias
+
+Implementado no Bloco 3 (`TechnologyEquivalence`).
+
+Uma equivalência vale só na direção declarada: o termo do currículo satisfaz o
+requisito da vaga, mas o contrário não. Regras atuais:
+
+```
+Spring Boot        satisfaz  Spring Framework
+Office 365         satisfaz  Microsoft Office
+PostgreSQL         satisfaz  SQL
+MySQL              satisfaz  SQL
+SQL Server         satisfaz  SQL
+Oracle             satisfaz  SQL
+H2                 satisfaz  SQL
+```
+
+`Spring Framework` **não** satisfaz `Spring Boot`. A assimetria evita apagar a
+distinção de quem pediu a ferramenta específica. A equivalência só promove o
+requisito quando a evidência já existe no currículo; ela não cria evidência.
+
+---
+
+## D7 — Fórmula do score
+
+Implementado no Bloco 4 (`ScoreCalculator`).
+
+```
+MATCH = 1,0 · PARTIAL = 0,5 · MISSING = 0,0
+score = pontos obtidos / total de requisitos reconhecidos × 100
+```
+
+Arredondado para uma casa decimal. Lista vazia ou nula resulta em `0`. O
+denominador é sempre o número de requisitos **reconhecidos**, não o número de
+requisitos escritos na vaga (ver L2).
+
+---
+
+## D8 — Resumo local, sem IA obrigatória
+
+Implementado no Bloco 4 (`LocalSummaryGenerator`).
+
+O resumo é montado por template, em português, sem chamada externa. Sugestões
+são sempre condicionais e nunca afirmam que a pessoa possui uma experiência. O
+Gemini permanece opcional e fora do escopo desta POC: o sistema funciona
+normalmente sem chave e sem rede.
+
+---
+
+## D9 — CSV local e desligável
+
+Implementado no Bloco 5 (`AnalysisCsvLogger`).
+
+Uma linha por requisito, cabeçalho `data,requisito,status,evidencia`, arquivo
+`analises.csv` na raiz de execução. Caminho e ativação vêm de
+`resumematch.csv.path` e `resumematch.csv.enabled`. Falha de escrita é logada e
+não derruba a análise. O arquivo está no `.gitignore` porque contém trechos do
+currículo.
+
+---
+
+## D10 — API e interface
+
+Implementado nos Blocos 6 e 7.
+
+- `POST /api/analyze` recebe `multipart/form-data` com `resume` (PDF) e `job`
+  (texto).
+- `POST /api/analyze/text` recebe JSON `{ "resume": "...", "job": "..." }`.
+- `GET /api/health` responde `{"status":"ok"}`.
+- A interface está em `/` e usa apenas HTML, CSS e JavaScript, sem framework.
+
+O upload é validado pelo conteúdo (`%PDF-` nos primeiros bytes), não pela
+extensão. Limites: 10 MB por PDF, 200 mil caracteres de currículo e 50 mil
+caracteres de vaga. Erros usam `ProblemDetail` (RFC 9457).
 
 ---
 
