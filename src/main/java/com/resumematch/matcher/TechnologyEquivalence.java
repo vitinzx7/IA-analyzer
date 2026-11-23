@@ -14,7 +14,9 @@ public final class TechnologyEquivalence {
     private static final Map<String, Set<String>> ACCEPTED = Map.of(
             "Spring Framework", Set.of("Spring Boot"),
             "Microsoft Office", Set.of("Office 365"),
-            "SQL", Set.of("PostgreSQL", "MySQL", "SQL Server", "Oracle", "H2"));
+            "SQL", Set.of("PostgreSQL", "MySQL", "SQL Server", "Oracle", "H2"),
+            "Azure", Set.of("Azure Container Apps"),
+            "Docker", Set.of("Docker Compose"));
 
     private TechnologyEquivalence() {
     }

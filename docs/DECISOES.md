@@ -3,7 +3,7 @@
 Decisões que já foram tomadas e não devem ser rediscutidas sem evidência nova.
 Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: Bloco 8.
+Última atualização: Bloco 8 + correção de equivalências de termos.
 
 ---
 
@@ -126,14 +126,21 @@ Uma equivalência vale só na direção declarada: o termo do currículo satisfa
 requisito da vaga, mas o contrário não. Regras atuais:
 
 ```
-Spring Boot        satisfaz  Spring Framework
-Office 365         satisfaz  Microsoft Office
-PostgreSQL         satisfaz  SQL
-MySQL              satisfaz  SQL
-SQL Server         satisfaz  SQL
-Oracle             satisfaz  SQL
-H2                 satisfaz  SQL
+Spring Boot             satisfaz  Spring Framework
+Office 365              satisfaz  Microsoft Office
+PostgreSQL              satisfaz  SQL
+MySQL                   satisfaz  SQL
+SQL Server              satisfaz  SQL
+Oracle                  satisfaz  SQL
+H2                      satisfaz  SQL
+Azure Container Apps    satisfaz  Azure
+Docker Compose          satisfaz  Docker
 ```
+
+As duas ultimas linhas cobrem termos especificos que, sem a equivalencia, eram
+consumidos pelo casamento mais longo e deixavam de satisfazer o termo generico
+da vaga. A direcao continua unica: `Azure` nao satisfaz `Azure Container Apps`
+e `Docker` nao satisfaz `Docker Compose`.
 
 `Spring Framework` **não** satisfaz `Spring Boot`. A assimetria evita apagar a
 distinção de quem pediu a ferramenta específica. A equivalência só promove o

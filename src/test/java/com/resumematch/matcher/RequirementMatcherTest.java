@@ -107,6 +107,32 @@ class RequirementMatcherTest {
     }
 
     @Test
+    void azureContainerAppsSatisfazRequisitoDeAzure() {
+        List<RequirementMatch> result = match(
+                "Desenvolvi e publiquei a aplicacao na Azure Container Apps.", "Azure");
+
+        assertThat(result.getFirst().status()).isEqualTo(MatchStatus.MATCH);
+        assertThat(result.getFirst().evidence()).contains("Azure Container Apps");
+    }
+
+    @Test
+    void dockerComposeSatisfazRequisitoDeDocker() {
+        List<RequirementMatch> result = match(
+                "Configurei o ambiente com Docker Compose.", "Docker");
+
+        assertThat(result.getFirst().status()).isEqualTo(MatchStatus.MATCH);
+        assertThat(result.getFirst().evidence()).contains("Docker Compose");
+    }
+
+    @Test
+    void termoGenericoNaoSatisfazRequisitoEspecifico() {
+        assertThat(match("Desenvolvi na Azure.", "Azure Container Apps").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+        assertThat(match("Utilizei Docker.", "Docker Compose").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+    }
+
+    @Test
     void semRequisitosDevolveListaVazia() {
         assertThat(matcher.match(List.of(), "Desenvolvi uma API.", List.of())).isEmpty();
         assertThat(matcher.match(null, "Desenvolvi uma API.", List.of())).isEmpty();

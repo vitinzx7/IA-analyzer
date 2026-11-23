@@ -3,7 +3,7 @@
 Problemas identificados e **não** resolvidos, com o motivo de não terem sido
 resolvidos. Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: Bloco 8.
+Última atualização: Bloco 8 + correção de equivalências de termos.
 
 Estado: `ABERTA` (não tratada) · `MITIGADA` (tratada em parte) ·
 `RESOLVIDA` (com o bloco que resolveu).
@@ -169,6 +169,12 @@ Não há mecanismo genérico.
 Uma forma mais longa que case e consuma a região impede formas menores ali,
 mesmo que a leitura menor fosse a correta. Foi exatamente o mecanismo do
 defeito do "pacote Office 365". O algoritmo não reavalia decisões tomadas.
+
+**Mitigação parcial:** pares específicos que sofriam com isso ganharam
+equivalência unidirecional: `Azure Container Apps` satisfaz `Azure` e
+`Docker Compose` satisfaz `Docker`. A causa raiz continua: o algoritmo ainda
+não reavalia a escolha, então outros pares podem precisar do mesmo tratamento
+manual.
 
 Relacionada a L6, mas não idêntica: L6 é sobre a **ordenação** escolher o
 candidato errado; L10 é sobre a **irreversibilidade** da escolha.
