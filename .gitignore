@@ -7,6 +7,8 @@ target/
 ### Resume Match ###
 *.log
 *.csv
+*.pdf
+*.docx
 src/test/resources/curriculos/
 .env
 CLAUDE.md
