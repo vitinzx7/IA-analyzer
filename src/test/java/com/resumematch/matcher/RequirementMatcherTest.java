@@ -1,7 +1,9 @@
 package com.resumematch.matcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -154,6 +156,18 @@ class RequirementMatcherTest {
         assertThat(result.evidence())
                 .isEqualTo("Victor | Desenvolvedor Java | [email] | [telefone]")
                 .doesNotContain("victor@email.com", "99999");
+    }
+
+    @Test
+    void textoComMuitasRepeticoesNaoFicaQuadratico() {
+        String repeated = "Java, ".repeat(30_000);
+        String manySentences = "Tecnologias: Java. ".repeat(10_000);
+
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+            assertThat(match(repeated, "Java", "Docker")).extracting(RequirementMatch::status)
+                    .containsExactly(MatchStatus.PARTIAL, MatchStatus.MISSING);
+            assertThat(match(manySentences, "Java").getFirst().status()).isEqualTo(MatchStatus.PARTIAL);
+        });
     }
 
     @Test
