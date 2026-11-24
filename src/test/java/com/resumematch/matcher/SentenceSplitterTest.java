@@ -92,4 +92,20 @@ class SentenceSplitterTest {
         assertThat(splitter.split("   ")).isEmpty();
         assertThat(splitter.split(null)).isEmpty();
     }
+
+    @Test
+    void linhaDeContatoNaoSeJuntaComOutras() {
+        assertThat(sentences("Victor Douglas\nEstudante de TI | Redes\nvictor@email.com"))
+                .containsExactly("Victor Douglas Estudante de TI | Redes", "victor@email.com");
+        assertThat(sentences("Victor Douglas\n(61) 99999-9999\nBrasilia"))
+                .containsExactly("Victor Douglas", "(61) 99999-9999", "Brasilia");
+    }
+
+    @Test
+    void arrobaEBarraVerticalNaoInterrompemAFrase() {
+        assertThat(sentences("• Implementei endpoints com @RestController e\nSpring Boot no backend."))
+                .containsExactly("Implementei endpoints com @RestController e Spring Boot no backend.");
+        assertThat(sentences("• Desenvolvi a API em Java | camada de servico e\nPostgreSQL como banco."))
+                .containsExactly("Desenvolvi a API em Java | camada de servico e PostgreSQL como banco.");
+    }
 }

@@ -8,7 +8,8 @@ import java.util.List;
  *
  * O texto de PDF vem quebrado por wrap visual. A primeira passada remonta os
  * paragrafos; a segunda separa as frases por pontuacao. Cada item de bullet
- * conta como frase propria.
+ * conta como frase propria. Linha de contato (e-mail, telefone ou link) nunca
+ * e juntada com outra.
  */
 public final class SentenceSplitter {
 
@@ -83,6 +84,9 @@ public final class SentenceSplitter {
             return false;
         }
         if (endsSentence(c) || isBullet(n)) {
+            return false;
+        }
+        if (PersonalData.isContactLine(c) || PersonalData.isContactLine(n)) {
             return false;
         }
         return !isHeader(c) && !isHeader(n);
