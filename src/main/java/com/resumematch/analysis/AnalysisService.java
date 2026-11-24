@@ -63,7 +63,7 @@ public final class AnalysisService {
         List<RequirementMatch> matches = matcher.match(requirements, resumeText, sentences);
         double score = scoreCalculator.calculate(matches);
         String summary = summaryGenerator.generate(matches, score);
-        AnalysisResult result = new AnalysisResult(score, matches, summary);
+        AnalysisResult result = new AnalysisResult(matches.isEmpty() ? null : score, matches, summary);
         analysisLog.log(result);
         return result;
     }

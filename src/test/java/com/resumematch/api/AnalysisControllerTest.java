@@ -1,5 +1,6 @@
 package com.resumematch.api;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,6 +47,19 @@ class AnalysisControllerTest {
                 .andExpect(jsonPath("$.requirements[0].status").value("MATCH"))
                 .andExpect(jsonPath("$.requirements[2].status").value("MISSING"))
                 .andExpect(jsonPath("$.summary").isNotEmpty());
+    }
+
+    @Test
+    void semRequisitoReconhecidoMandaScoreNulo() throws Exception {
+        mockMvc.perform(post("/api/analyze/text")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"resume":"Desenvolvi uma API em Java.",
+                         "job":"Cozinheiro com experiencia em restaurante"}
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.score").value(nullValue()))
+                .andExpect(jsonPath("$.requirements").isEmpty());
     }
 
     @Test

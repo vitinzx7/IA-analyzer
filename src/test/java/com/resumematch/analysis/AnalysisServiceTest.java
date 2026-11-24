@@ -128,11 +128,11 @@ class AnalysisServiceTest {
     }
 
     @Test
-    void semRequisitosReconhecidosDevolveScoreZero() {
+    void semRequisitosReconhecidosNaoCalculaScore() {
         AnalysisResult result = service.analyze(
                 "Desenvolvi uma API em Java.", "Cozinheiro com experiencia em restaurante");
 
-        assertThat(result.score()).isEqualTo(0.0);
+        assertThat(result.score()).isNull();
         assertThat(result.requirements()).isEmpty();
         assertThat(result.summary()).contains("Nenhum requisito reconhecido");
     }
