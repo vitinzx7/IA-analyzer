@@ -34,4 +34,46 @@ class JobRequirementExtractorTest {
         assertThat(extractor.extract("   ")).isEmpty();
         assertThat(extractor.extract(null)).isEmpty();
     }
+
+    @Test
+    void agrupaAlternativasDaMesmaFamilia() {
+        assertThat(extractor.extract("Cloud: Azure, AWS ou GCP.")).containsExactly("Azure / AWS / GCP");
+        assertThat(extractor.extract("PostgreSQL ou MySQL")).containsExactly("PostgreSQL / MySQL");
+        assertThat(extractor.extract("Azure ou AWS ou GCP")).containsExactly("Azure / AWS / GCP");
+        assertThat(extractor.extract("Repositorio no GitHub/GitLab")).containsExactly("GitHub / GitLab");
+        assertThat(extractor.extract("Azure e/ou AWS")).containsExactly("Azure / AWS");
+        assertThat(extractor.extract("Azure e AWS")).containsExactly("Azure", "AWS");
+    }
+
+    @Test
+    void naoAgrupaListaDeFamiliasDiferentes() {
+        assertThat(extractor.extract("Requisitos: Java, Spring Boot, Docker, Git ou GitHub."))
+                .containsExactly("Java", "Spring Boot", "Docker", "Git", "GitHub");
+    }
+
+    @Test
+    void barraEntreWindowsELinuxPedeOsDois() {
+        assertThat(extractor.extract("Suporte em ambiente Windows/Linux."))
+                .containsExactly("Windows", "Linux");
+    }
+
+    @Test
+    void agrupaSoOFinalDaListaQueEhDaMesmaFamilia() {
+        assertThat(extractor.extract("Stack: Java, Docker, Azure, AWS ou GCP."))
+                .containsExactly("Java", "Docker", "Azure / AWS / GCP");
+    }
+
+    @Test
+    void tecnologiaDoGrupoNaoEntraDeNovoSozinha() {
+        assertThat(extractor.extract("Azure, AWS ou GCP. Experiencia com Azure."))
+                .containsExactly("Azure / AWS / GCP");
+        assertThat(extractor.extract("Experiencia com Azure. Cloud: Azure, AWS ou GCP."))
+                .containsExactly("Azure / AWS / GCP");
+    }
+
+    @Test
+    void termoComBarraNoNomeNaoViraAlternativa() {
+        assertThat(extractor.extract("Conhecimento em TCP/IP e CI/CD"))
+                .containsExactly("TCP/IP", "CI/CD");
+    }
 }
