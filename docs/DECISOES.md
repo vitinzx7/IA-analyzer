@@ -3,7 +3,7 @@
 Decisões que já foram tomadas e não devem ser rediscutidas sem evidência nova.
 Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: requisitos de alternativas (D11).
+Última atualização: contato e privacidade (D2, D12).
 
 ---
 
@@ -89,6 +89,12 @@ maiúsculas), ou a linha está vazia.
 
 Decidido **não** usar `:` como fim de parágrafo. O texto real mostrou
 `Conclusão prevista:` quebrando antes de `2028`.
+
+**Linha de contato nunca é juntada** com a anterior nem com a seguinte.
+Contato é a linha que tem um e-mail de verdade (`nome@dominio.tld`), um
+telefone com DDD ou um link (`http`, `www`, `github.com`, `linkedin.com`). Um
+`@` solto, como `@RestController`, ou um `|` não fazem a linha virar contato:
+as duas coisas aparecem em frases de projeto que quebram de linha.
 
 **Passada 2, separar frases** sobre o texto já remontado, por `.`, `!`, `?` e
 `;`, tratando cada item de bullet como frase própria mesmo sem pontuação final.
@@ -250,6 +256,19 @@ não entra de novo como requisito sozinha, em qualquer ordem do texto.
 separar todos os termos quando a lista inteira não fosse da mesma família.
 Isso deixaria "Java, Docker, Azure, AWS ou GCP" com os mesmos dois MISSING
 falsos. Por isso o agrupamento olha só o trecho final da lista.
+
+---
+
+## D12 — Evidência sem e-mail e telefone
+
+Implementado em `PersonalData` e `RequirementMatcher`.
+
+Antes de a evidência sair do matcher, e portanto antes de chegar à tela e ao
+CSV, e-mail vira `[email]` e telefone vira `[telefone]`.
+
+O padrão de telefone exige DDD. Sem essa exigência, "2026-2028" teria o mesmo
+formato de um telefone de oito dígitos. Verificado em teste que ano, versão
+("Java 21"), período ("01/2024 - 12/2025") e IP não são mascarados.
 
 ---
 

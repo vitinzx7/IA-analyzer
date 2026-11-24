@@ -3,7 +3,7 @@
 Problemas identificados e **não** resolvidos, com o motivo de não terem sido
 resolvidos. Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: requisitos de alternativas (D11).
+Última atualização: contato e privacidade (D2, D12).
 
 Estado: `ABERTA` (não tratada) · `MITIGADA` (tratada em parte) ·
 `RESOLVIDA` (com o bloco que resolveu).
@@ -215,3 +215,30 @@ alternativa; "e" não. "Azure e/ou AWS" agrupa; "Azure e AWS" não.
 
 **Por que não foi tratada:** crescer as famílias pelos erros vistos no CSV, como
 o dicionário (D3), em vez de prever todos os pares.
+
+---
+
+## L13 — Máscara cobre só e-mail e telefone · ABERTA
+
+A máscara de evidência (D12) troca e-mail e telefone. Nome, CPF, endereço e
+links de perfil continuam aparecendo se estiverem na frase usada como
+evidência. Verificado:
+
+```
+"CPF 123.456.789-00"     -> sem máscara
+"Matricula 2023101234"   -> "Matricula [telefone]"   (falso positivo: 10 dígitos
+                                                       têm o formato de DDD + número)
+```
+
+Uma linha com link nunca é juntada com a seguinte (D2). Num bullet de projeto
+que tenha link e quebre de linha, a continuação vira frase separada e pode
+perder o verbo:
+
+```
+"• Publiquei o codigo em github.com/x/y com backend em\nJava."
+   -> "Java." fica sozinha
+```
+
+**Por que não foi tratada:** o pedido cobria e-mail e telefone. CPF e nome
+exigem regra própria, e a exceção para bullets com link ainda não tem caso real
+no CSV.
