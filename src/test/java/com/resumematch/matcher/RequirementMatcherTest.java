@@ -137,4 +137,22 @@ class RequirementMatcherTest {
         assertThat(matcher.match(List.of(), "Desenvolvi uma API.", List.of())).isEmpty();
         assertThat(matcher.match(null, "Desenvolvi uma API.", List.of())).isEmpty();
     }
+
+    @Test
+    void grupoDeAlternativasAceitaQualquerOpcao() {
+        List<RequirementMatch> result = match(
+                "Desenvolvi e publiquei no Azure Container Apps.", "Azure / AWS / GCP");
+
+        assertThat(result.getFirst().name()).isEqualTo("Azure / AWS / GCP");
+        assertThat(result.getFirst().status()).isEqualTo(MatchStatus.MATCH);
+        assertThat(result.getFirst().evidence()).isEqualTo("Desenvolvi e publiquei no Azure Container Apps.");
+    }
+
+    @Test
+    void grupoDeAlternativasSegueAMesmaRegraDeEvidencia() {
+        assertThat(match("Cloud: GCP.", "Azure / AWS / GCP").getFirst().status())
+                .isEqualTo(MatchStatus.PARTIAL);
+        assertThat(match("Desenvolvi uma API em Java.", "Azure / AWS / GCP").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+    }
 }

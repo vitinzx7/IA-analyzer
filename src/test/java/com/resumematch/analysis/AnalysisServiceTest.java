@@ -56,6 +56,19 @@ class AnalysisServiceTest {
     }
 
     @Test
+    void grupoDeAlternativasValeUmRequisitoNoScore() {
+        AnalysisResult result = service.analyze(
+                "Desenvolvi e publiquei no Azure Container Apps.",
+                "Cloud: Azure, AWS ou GCP. Desejavel Kubernetes.");
+
+        assertThat(result.requirements()).extracting(r -> r.name())
+                .containsExactly("Azure / AWS / GCP", "Kubernetes");
+        assertThat(result.requirements()).extracting(r -> r.status())
+                .containsExactly(MatchStatus.MATCH, MatchStatus.MISSING);
+        assertThat(result.score()).isEqualTo(50.0);
+    }
+
+    @Test
     void analisaPdfGerado() throws IOException {
         String text = "Desenvolvi uma API em Java com Spring Boot e PostgreSQL. "
                 + "Tambem utilizei Docker e Git no projeto. "

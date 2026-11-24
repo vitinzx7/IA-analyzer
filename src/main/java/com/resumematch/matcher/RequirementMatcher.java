@@ -11,7 +11,8 @@ import com.resumematch.dictionary.TermOccurrence;
  * Classifica cada requisito pela forca da evidencia no curriculo.
  *
  * MATCH exige o termo numa frase com verbo de acao; PARTIAL aceita o termo em
- * qualquer frase; MISSING significa que o termo nao aparece.
+ * qualquer frase; MISSING significa que o termo nao aparece. Um requisito de
+ * alternativas ("Azure / AWS / GCP") e satisfeito por qualquer uma das opcoes.
  */
 public final class RequirementMatcher {
 
@@ -37,8 +38,10 @@ public final class RequirementMatcher {
 
     private RequirementMatch matchOne(String requirement, List<TermOccurrence> occurrences,
             List<Sentence> sentences) {
+        List<String> options = RequirementAlternatives.options(requirement);
         List<TermOccurrence> found = occurrences.stream()
-                .filter(occurrence -> TechnologyEquivalence.satisfies(requirement, occurrence.technology()))
+                .filter(occurrence -> options.stream()
+                        .anyMatch(option -> TechnologyEquivalence.satisfies(option, occurrence.technology())))
                 .sorted(Comparator.comparingInt(TermOccurrence::start))
                 .toList();
 
