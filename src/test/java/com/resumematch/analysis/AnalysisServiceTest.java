@@ -23,6 +23,7 @@ import com.resumematch.matcher.JobRequirementExtractor;
 import com.resumematch.matcher.LocalSummaryGenerator;
 import com.resumematch.matcher.MatchStatus;
 import com.resumematch.matcher.RequirementMatcher;
+import com.resumematch.matcher.RequirementPriority;
 import com.resumematch.matcher.ScoreCalculator;
 import com.resumematch.matcher.SentenceSplitter;
 import com.resumematch.pdf.PdfTextExtractor;
@@ -59,13 +60,25 @@ class AnalysisServiceTest {
     void grupoDeAlternativasValeUmRequisitoNoScore() {
         AnalysisResult result = service.analyze(
                 "Desenvolvi e publiquei no Azure Container Apps.",
-                "Cloud: Azure, AWS ou GCP. Desejavel Kubernetes.");
+                "Cloud: Azure, AWS ou GCP. Experiencia com Kubernetes.");
 
         assertThat(result.requirements()).extracting(r -> r.name())
                 .containsExactly("Azure / AWS / GCP", "Kubernetes");
         assertThat(result.requirements()).extracting(r -> r.status())
                 .containsExactly(MatchStatus.MATCH, MatchStatus.MISSING);
         assertThat(result.score()).isEqualTo(50.0);
+    }
+
+    @Test
+    void diferencialAusentePesaMetadeNoScore() {
+        AnalysisResult result = service.analyze(
+                "Desenvolvi uma API em Java.",
+                "Requisitos\nJava\nDiferenciais\nKubernetes");
+
+        assertThat(result.requirements()).extracting(r -> r.priority())
+                .containsExactly(RequirementPriority.REQUIRED, RequirementPriority.PREFERRED);
+        assertThat(result.score()).isEqualTo(66.7);
+        assertThat(result.summary()).contains("Diferenciais valem metade");
     }
 
     @Test

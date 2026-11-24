@@ -29,6 +29,16 @@ class MatcherModelsTest {
     }
 
     @Test
+    void requisitoSemPrioridadeInformadaEhObrigatorio() {
+        assertThat(new RequirementMatch("Java", MatchStatus.MATCH, "Desenvolvi.").priority())
+                .isEqualTo(RequirementPriority.REQUIRED);
+        assertThat(new RequirementMatch("Java", MatchStatus.MATCH, "Desenvolvi.", null).priority())
+                .isEqualTo(RequirementPriority.REQUIRED);
+        assertThat(new JobRequirement("Java", null).priority())
+                .isEqualTo(RequirementPriority.REQUIRED);
+    }
+
+    @Test
     void permiteAusenciaDeEvidenciaParaRequisitoFaltante() {
         RequirementMatch match = new RequirementMatch("AWS", MatchStatus.MISSING, null);
 

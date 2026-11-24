@@ -26,12 +26,26 @@ public final class RequirementMatcher {
     private record Mention(TermOccurrence occurrence, Sentence sentence) {
     }
 
+    private record Found(MatchStatus status, String evidence) {
+    }
+
     public RequirementMatcher(TechnologyDictionary dictionary) {
         this.dictionary = dictionary;
     }
 
+    /** Requisitos sem prioridade informada contam como obrigatorios. */
     public List<RequirementMatch> match(List<String> requirements, String resumeText,
             List<Sentence> sentences) {
+        if (requirements == null) {
+            return List.of();
+        }
+        return matchRequirements(requirements.stream()
+                .map(name -> new JobRequirement(name, RequirementPriority.REQUIRED))
+                .toList(), resumeText, sentences);
+    }
+
+    public List<RequirementMatch> matchRequirements(List<JobRequirement> requirements,
+            String resumeText, List<Sentence> sentences) {
         if (requirements == null || requirements.isEmpty()) {
             return List.of();
         }
@@ -39,8 +53,10 @@ public final class RequirementMatcher {
         List<Mention> mentions = mentions(text, sentences == null ? List.of() : sentences);
         Map<Sentence, Boolean> hasAction = new IdentityHashMap<>();
         List<RequirementMatch> result = new ArrayList<>();
-        for (String requirement : requirements) {
-            result.add(matchOne(requirement, mentions, hasAction));
+        for (JobRequirement requirement : requirements) {
+            Found found = find(RequirementAlternatives.options(requirement.name()), mentions, hasAction);
+            result.add(new RequirementMatch(requirement.name(), found.status(), found.evidence(),
+                    requirement.priority()));
         }
         return List.copyOf(result);
     }
@@ -65,23 +81,22 @@ public final class RequirementMatcher {
         return mentions;
     }
 
-    private RequirementMatch matchOne(String requirement, List<Mention> mentions,
+    private Found find(List<String> options, List<Mention> mentions,
             Map<Sentence, Boolean> hasAction) {
-        List<String> options = RequirementAlternatives.options(requirement);
         List<Mention> found = mentions.stream()
                 .filter(mention -> options.stream().anyMatch(option ->
                         TechnologyEquivalence.satisfies(option, mention.occurrence().technology())))
                 .toList();
 
         if (found.isEmpty()) {
-            return new RequirementMatch(requirement, MatchStatus.MISSING, null);
+            return new Found(MatchStatus.MISSING, null);
         }
 
         for (Mention mention : found) {
             Sentence sentence = mention.sentence();
             if (sentence != null
                     && hasAction.computeIfAbsent(sentence, s -> ActionVerbs.contains(s.text()))) {
-                return new RequirementMatch(requirement, MatchStatus.MATCH, evidence(sentence.text()));
+                return new Found(MatchStatus.MATCH, evidence(sentence.text()));
             }
         }
 
@@ -89,7 +104,7 @@ public final class RequirementMatcher {
         String evidence = first.sentence() != null
                 ? first.sentence().text()
                 : first.occurrence().matchedText();
-        return new RequirementMatch(requirement, MatchStatus.PARTIAL, evidence(evidence));
+        return new Found(MatchStatus.PARTIAL, evidence(evidence));
     }
 
     /**

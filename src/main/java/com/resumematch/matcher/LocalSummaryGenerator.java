@@ -53,6 +53,10 @@ public final class LocalSummaryGenerator implements SummaryGenerator {
             summary.append(" Todos os requisitos reconhecidos tem evidencia com acao no curriculo.");
         }
 
+        if (requirements.stream().anyMatch(r -> r.priority() == RequirementPriority.PREFERRED)) {
+            summary.append(" Diferenciais valem metade no calculo.");
+        }
+
         summary.append(" Requisitos fora do dicionario nao entram no calculo. ")
                 .append("O score nao e uma probabilidade de contratacao.");
         return summary.toString();

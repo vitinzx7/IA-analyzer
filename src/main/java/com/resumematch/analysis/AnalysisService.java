@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.resumematch.matcher.AnalysisResult;
+import com.resumematch.matcher.JobRequirement;
 import com.resumematch.matcher.JobRequirementExtractor;
 import com.resumematch.matcher.RequirementMatch;
 import com.resumematch.matcher.RequirementMatcher;
@@ -59,8 +60,8 @@ public final class AnalysisService {
         validate(resumeText, jobText);
 
         List<Sentence> sentences = sentenceSplitter.split(resumeText);
-        List<String> requirements = requirementExtractor.extract(jobText);
-        List<RequirementMatch> matches = matcher.match(requirements, resumeText, sentences);
+        List<JobRequirement> requirements = requirementExtractor.requirements(jobText);
+        List<RequirementMatch> matches = matcher.matchRequirements(requirements, resumeText, sentences);
         double score = scoreCalculator.calculate(matches);
         String summary = summaryGenerator.generate(matches, score);
         AnalysisResult result = new AnalysisResult(matches.isEmpty() ? null : score, matches, summary);

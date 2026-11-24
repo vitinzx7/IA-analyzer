@@ -16,6 +16,17 @@ class LocalSummaryGeneratorTest {
     }
 
     @Test
+    void avisaQueDiferencialValeMetadeSoQuandoHaDiferencial() {
+        String comDiferencial = generator.generate(List.of(
+                match("Java", MatchStatus.MATCH),
+                new RequirementMatch("AWS", MatchStatus.MISSING, null, RequirementPriority.PREFERRED)), 66.7);
+        String semDiferencial = generator.generate(List.of(match("Java", MatchStatus.MATCH)), 100.0);
+
+        assertThat(comDiferencial).contains("Diferenciais valem metade");
+        assertThat(semDiferencial).doesNotContain("Diferenciais");
+    }
+
+    @Test
     void resumeAsContagensDoResultado() {
         String summary = generator.generate(List.of(
                 match("Java", MatchStatus.MATCH),

@@ -78,6 +78,20 @@ class AnalysisControllerTest {
     }
 
     @Test
+    void mandaAPrioridadeDeCadaRequisito() throws Exception {
+        mockMvc.perform(post("/api/analyze/text")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"resume":"Desenvolvi uma API em Java.",
+                         "job":"Requisitos: Java.\\nDiferenciais: AWS."}
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.score").value(66.7))
+                .andExpect(jsonPath("$.requirements[0].priority").value("REQUIRED"))
+                .andExpect(jsonPath("$.requirements[1].priority").value("PREFERRED"));
+    }
+
+    @Test
     void rejeitaJsonMalformado() throws Exception {
         mockMvc.perform(post("/api/analyze/text")
                 .contentType(MediaType.APPLICATION_JSON)

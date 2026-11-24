@@ -50,6 +50,22 @@ class ScoreCalculatorTest {
     }
 
     @Test
+    void diferencialPesaMetade() {
+        assertThat(calculator.calculate(List.of(
+                new RequirementMatch("Java", MatchStatus.MATCH, "evidencia", RequirementPriority.REQUIRED),
+                new RequirementMatch("AWS", MatchStatus.MISSING, null, RequirementPriority.PREFERRED))))
+                .isEqualTo(66.7);
+    }
+
+    @Test
+    void diferencialEncontradoNaoCompensaObrigatorioAusente() {
+        assertThat(calculator.calculate(List.of(
+                new RequirementMatch("Java", MatchStatus.MISSING, null, RequirementPriority.REQUIRED),
+                new RequirementMatch("AWS", MatchStatus.MATCH, "evidencia", RequirementPriority.PREFERRED))))
+                .isEqualTo(33.3);
+    }
+
+    @Test
     void listaVaziaOuNulaDevolveZero() {
         assertThat(calculator.calculate(List.of())).isEqualTo(0.0);
         assertThat(calculator.calculate(null)).isEqualTo(0.0);

@@ -1,6 +1,12 @@
 package com.resumematch.matcher;
 
+import static com.resumematch.matcher.RequirementPriority.PREFERRED;
+import static com.resumematch.matcher.RequirementPriority.REQUIRED;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 
@@ -75,5 +81,95 @@ class JobRequirementExtractorTest {
     void termoComBarraNoNomeNaoViraAlternativa() {
         assertThat(extractor.extract("Conhecimento em TCP/IP e CI/CD"))
                 .containsExactly("TCP/IP", "CI/CD");
+    }
+
+    @Test
+    void requisitoDaSecaoDiferenciaisViraDiferencial() {
+        assertThat(extractor.requirements("Requisitos\nJava e Docker.\nDiferenciais\nAWS."))
+                .containsExactly(
+                        new JobRequirement("Java", REQUIRED),
+                        new JobRequirement("Docker", REQUIRED),
+                        new JobRequirement("AWS", PREFERRED));
+    }
+
+    @Test
+    void trechoComDesejavelViraDiferencialSemMudarORestoDaLinha() {
+        assertThat(extractor.requirements(
+                "Requisitos: Java. Desejavel Terraform. Experiencia com Docker."))
+                .containsExactly(
+                        new JobRequirement("Java", REQUIRED),
+                        new JobRequirement("Terraform", PREFERRED),
+                        new JobRequirement("Docker", REQUIRED));
+    }
+
+    @Test
+    void ignoraBeneficiosLocalEHorario() {
+        String job = """
+                Requisitos: Java.
+                Benefícios oferecidos:
+                Curso de AWS pago pela empresa.
+                Local de atuação: sala com Docker e Kubernetes
+                """;
+        assertThat(extractor.extract(job)).containsExactly("Java");
+    }
+
+    @Test
+    void tituloComDoisPontosValeAteOProximoTitulo() {
+        assertThat(extractor.requirements("Diferenciais: Kubernetes\nTerraform\nRequisitos:\nJava"))
+                .containsExactly(
+                        new JobRequirement("Kubernetes", PREFERRED),
+                        new JobRequirement("Terraform", PREFERRED),
+                        new JobRequirement("Java", REQUIRED));
+    }
+
+    @Test
+    void linhaQueComecaComPalavraDeTituloNaoMudaASecao() {
+        assertThat(extractor.requirements(
+                "Diferenciais\nConhecimentos em Java\nHabilidades de comunicacao\nKubernetes"))
+                .containsExactly(
+                        new JobRequirement("Java", PREFERRED),
+                        new JobRequirement("Kubernetes", PREFERRED));
+    }
+
+    @Test
+    void obrigatorioNoTrechoVenceASecao() {
+        assertThat(extractor.requirements("Diferenciais:\nAWS.\nImprescindível experiência com Java."))
+                .containsExactly(
+                        new JobRequirement("AWS", PREFERRED),
+                        new JobRequirement("Java", REQUIRED));
+    }
+
+    @Test
+    void requisitoEmDuasSecoesFicaComAMaiorPrioridade() {
+        assertThat(extractor.requirements("Diferenciais: Java.\nRequisitos: Java e Docker."))
+                .containsExactly(
+                        new JobRequirement("Java", REQUIRED),
+                        new JobRequirement("Docker", REQUIRED));
+    }
+
+    @Test
+    void leSecoesDeVagaCopiadaDoLinkedin() throws IOException {
+        String job = Files.readString(Path.of("src/test/resources/vagas/vaga3_suport.txt"));
+
+        assertThat(extractor.requirements(job)).containsExactly(
+                new JobRequirement("ITIL", PREFERRED),
+                new JobRequirement("Windows", PREFERRED),
+                new JobRequirement("Office 365", PREFERRED));
+    }
+
+    @Test
+    void leSecoesComMarcadorDeLista() throws IOException {
+        String job = Files.readString(
+                Path.of("src/test/resources/vagas-sinteticas/vaga3_estagio_infra_cloud.txt"));
+
+        assertThat(extractor.requirements(job)).containsExactly(
+                new JobRequirement("Linux", REQUIRED),
+                new JobRequirement("Redes de Computadores", REQUIRED),
+                new JobRequirement("Docker", REQUIRED),
+                new JobRequirement("Git", REQUIRED),
+                new JobRequirement("GitHub", REQUIRED),
+                new JobRequirement("Azure / AWS", PREFERRED),
+                new JobRequirement("Kubernetes", PREFERRED),
+                new JobRequirement("Terraform", PREFERRED));
     }
 }

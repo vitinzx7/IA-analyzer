@@ -21,6 +21,19 @@ class RequirementMatcherTest {
     }
 
     @Test
+    void mantemAPrioridadeDoRequisito() {
+        String resume = "Desenvolvi uma API em Java.";
+        List<RequirementMatch> result = matcher.matchRequirements(List.of(
+                new JobRequirement("Java", RequirementPriority.REQUIRED),
+                new JobRequirement("AWS", RequirementPriority.PREFERRED)), resume, splitter.split(resume));
+
+        assertThat(result).extracting(RequirementMatch::priority)
+                .containsExactly(RequirementPriority.REQUIRED, RequirementPriority.PREFERRED);
+        assertThat(result).extracting(RequirementMatch::status)
+                .containsExactly(MatchStatus.MATCH, MatchStatus.MISSING);
+    }
+
+    @Test
     void classificaMatchPartialEMissing() {
         List<RequirementMatch> result = match(
                 "Desenvolvi uma API em Java com Spring Boot.", "Java", "Spring Boot", "AWS");
