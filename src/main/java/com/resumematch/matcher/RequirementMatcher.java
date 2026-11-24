@@ -65,7 +65,7 @@ public final class RequirementMatcher {
             }
         }
         for (Sentence sentence : sentences) {
-            if (sentence.text().contains(occurrence.matchedText())) {
+            if (occurrence.start() < sentence.end() && occurrence.end() > sentence.start()) {
                 return sentence;
             }
         }
