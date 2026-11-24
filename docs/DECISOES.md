@@ -33,6 +33,12 @@ e exclui os verbos de posse do resumo. Ver o achado O3 em
 
 **Não há critério de contagem mínima de palavras.**
 
+**Negação do verbo.** Um verbo da lista não conta quando vem logo depois de
+`não`, `nunca`, `jamais` ou `sem`, na mesma oração (a oração começa depois da
+última `,` ou `;`). "Nunca utilizei AWS." não é MATCH. "Sem experiência
+prévia, desenvolvi uma API em Java." continua MATCH, porque a negação está em
+outra oração.
+
 ### D1 — nota de proveniência
 
 Duas rodadas de review afirmaram que a seção 4.3 do plano define
@@ -183,6 +189,10 @@ Uma linha por requisito, cabeçalho `data,requisito,status,evidencia`, arquivo
 `resumematch.csv.path` e `resumematch.csv.enabled`. Falha de escrita é logada e
 não derruba a análise. O arquivo está no `.gitignore` porque contém trechos do
 currículo.
+
+A evidência vem do PDF, ou seja, de quem escreveu o currículo. Um campo que
+comece com `=`, `+`, `-` ou `@` recebe um apóstrofo na frente, para que uma
+planilha não o execute como fórmula (CSV injection).
 
 ---
 
