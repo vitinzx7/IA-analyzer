@@ -8,4 +8,9 @@ import java.util.List;
 public interface SummaryGenerator {
 
     String generate(List<RequirementMatch> requirements, double score);
+
+    /** Versao que conhece a leitura da vaga, para citar o que nao foi avaliado. */
+    default String generate(List<RequirementMatch> requirements, double score, JobExtraction job) {
+        return generate(requirements, score);
+    }
 }

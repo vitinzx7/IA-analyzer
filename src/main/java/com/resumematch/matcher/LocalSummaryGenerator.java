@@ -15,9 +15,16 @@ public final class LocalSummaryGenerator implements SummaryGenerator {
 
     @Override
     public String generate(List<RequirementMatch> requirements, double score) {
+        return generate(requirements, score, null);
+    }
+
+    @Override
+    public String generate(List<RequirementMatch> requirements, double score, JobExtraction job) {
+        String unevaluated = unevaluated(job);
         if (requirements == null || requirements.isEmpty()) {
             return "Nenhum requisito reconhecido na descricao da vaga. "
                     + "O dicionario atual nao cobre os termos desta vaga, entao o score nao foi calculado. "
+                    + unevaluated
                     + "Requisitos fora do dicionario nao entram no calculo.";
         }
 
@@ -57,9 +64,20 @@ public final class LocalSummaryGenerator implements SummaryGenerator {
             summary.append(" Diferenciais valem metade no calculo.");
         }
 
-        summary.append(" Requisitos fora do dicionario nao entram no calculo. ")
+        summary.append(' ').append(unevaluated)
+                .append("Requisitos fora do dicionario nao entram no calculo. ")
                 .append("O score nao e uma probabilidade de contratacao.");
         return summary.toString();
+    }
+
+    /** Frase sobre os trechos da vaga que ficaram de fora, ou vazio. */
+    private String unevaluated(JobExtraction job) {
+        int count = job == null ? 0 : job.unevaluated().size();
+        if (count == 0) {
+            return "";
+        }
+        return count + " trecho(s) de requisito da vaga nao foram avaliados "
+                + "(formacao, idioma ou termos fora do dicionario). ";
     }
 
     private String names(List<RequirementMatch> matches) {

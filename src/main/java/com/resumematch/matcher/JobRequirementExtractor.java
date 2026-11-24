@@ -42,6 +42,17 @@ public final class JobRequirementExtractor {
     private static final Pattern PARENTHESES = Pattern.compile("\\(([^()]*)\\)");
     private static final Pattern EXAMPLE_CUE = Pattern.compile(
             "\\b(?:ex|exemplo|exemplos|como|similar|similares|etc|outr[oa]s|afins|equivalentes?)\\b");
+    private static final Pattern EDUCATION = Pattern.compile(
+            "^(?:\\S+\\s+)?(?:cursando|ensino (?:superior|medio|tecnico)"
+                    + "|superior (?:completo|incompleto|em andamento)|graduacao|graduad[oa]"
+                    + "|bacharelado|bacharel|licenciatura|tecnologo|formacao|formad[oa]"
+                    + "|pos[- ]graduacao|mba|mestrado|doutorado|estudante)\\b");
+    private static final Pattern LANGUAGE = Pattern.compile(
+            "\\b(?:ingles|espanhol|frances|alemao|italiano|mandarim|japones|idiomas?|english|spanish)\\b");
+    private static final Set<JobSection> LISTED_SECTIONS = Set.of(
+            JobSection.REQUIREMENTS, JobSection.RESPONSIBILITIES, JobSection.PREFERRED);
+    private static final int MAX_UNEVALUATED = 50;
+    private static final int MAX_TEXT = 200;
 
     private enum Gap { COMMA, OR, OTHER }
 
@@ -63,11 +74,26 @@ public final class JobRequirementExtractor {
     }
 
     public List<JobRequirement> requirements(String jobText) {
+        return read(jobText).requirements();
+    }
+
+    /**
+     * Le a vaga inteira: requisitos, trechos que ficaram fora do calculo e
+     * nomes que o dicionario nao conhece.
+     *
+     * Trecho de formacao ("Cursando ensino superior em Redes de
+     * Computadores") nao gera requisito tecnico: ali o termo e nome de curso.
+     * So os trechos de requisitos, responsabilidades e diferenciais entram na
+     * lista do que nao foi avaliado; a apresentacao da empresa nao.
+     */
+    public JobExtraction read(String jobText) {
         if (jobText == null || jobText.isBlank()) {
-            return List.of();
+            return JobExtraction.EMPTY;
         }
         List<TermOccurrence> occurrences = dictionary.findIn(jobText);
         List<Item> items = new ArrayList<>();
+        Set<UnevaluatedItem> unevaluated = new LinkedHashSet<>();
+        Map<String, String> unknownTerms = new LinkedHashMap<>();
         int next = 0;
         for (JobSegments.Segment segment : JobSegments.read(jobText, occurrences)) {
             while (next < occurrences.size() && occurrences.get(next).start() < segment.start()) {
@@ -77,11 +103,35 @@ public final class JobRequirementExtractor {
             while (next < occurrences.size() && occurrences.get(next).end() <= segment.end()) {
                 next++;
             }
-            if (segment.section() != JobSection.IGNORED && first < next) {
-                addSegment(jobText, segment, occurrences.subList(first, next), items);
+            if (segment.section() == JobSection.IGNORED) {
+                continue;
+            }
+            List<TermOccurrence> inside = occurrences.subList(first, next);
+            String text = jobText.substring(segment.start(), segment.end());
+            String normalized = TextNormalizer.normalize(text);
+            boolean listed = LISTED_SECTIONS.contains(segment.section());
+
+            if (EDUCATION.matcher(stripMarker(normalized)).find()) {
+                if (listed) {
+                    unevaluated.add(unevaluated(text, segment, UnevaluatedItem.Reason.EDUCATION));
+                }
+                continue;
+            }
+            if (!inside.isEmpty()) {
+                addSegment(jobText, segment, inside, items);
+            }
+            if (listed) {
+                if (inside.isEmpty()) {
+                    unevaluated.add(unevaluated(text, segment, LANGUAGE.matcher(normalized).find()
+                            ? UnevaluatedItem.Reason.LANGUAGE
+                            : UnevaluatedItem.Reason.NO_KNOWN_TERM));
+                }
+                UnknownTerms.collect(jobText, segment.start(), segment.end(), inside, unknownTerms);
             }
         }
-        return requirements(items);
+        return new JobExtraction(requirements(items),
+                unevaluated.stream().limit(MAX_UNEVALUATED).toList(),
+                List.copyOf(unknownTerms.values()));
     }
 
     private void addSegment(String jobText, JobSegments.Segment segment,
@@ -216,6 +266,25 @@ public final class JobRequirementExtractor {
             return Gap.OR;
         }
         return Gap.OTHER;
+    }
+
+    private static UnevaluatedItem unevaluated(String text, JobSegments.Segment segment,
+            UnevaluatedItem.Reason reason) {
+        String clean = stripMarker(text).replaceAll("\\s+", " ").strip();
+        if (clean.length() > MAX_TEXT) {
+            clean = clean.substring(0, MAX_TEXT).strip() + "…";
+        }
+        return new UnevaluatedItem(clean, segment.section(), reason);
+    }
+
+    /** Tira marcador de lista e emoji do comeco do trecho. */
+    private static String stripMarker(String text) {
+        int start = 0;
+        while (start < text.length() && !Character.isLetterOrDigit(text.charAt(start))
+                && text.charAt(start) != '(' && text.charAt(start) != '.') {
+            start++;
+        }
+        return text.substring(start);
     }
 
     private static Item single(TermOccurrence occurrence, RequirementPriority priority) {
