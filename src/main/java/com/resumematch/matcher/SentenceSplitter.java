@@ -169,11 +169,21 @@ public final class SentenceSplitter {
     }
 
     /**
-     * Nomes como "Node.js" e "ASP.NET" tem ponto no meio. Um ponto seguido de
-     * um trecho curto, todo em minusculas ou todo em maiusculas, e tratado como
-     * parte do nome; "fim.Tambem" continua sendo separador.
+     * Nomes como "Node.js" e "ASP.NET" tem ponto no meio, e enderecos como
+     * "github.com/x/y" tambem.
+     *
+     * Ponto colado entre letra ou digito e uma minuscula faz parte do nome ou
+     * do endereco. Fora isso, um trecho curto todo em minusculas ou todo em
+     * maiusculas depois do ponto e nome; em maiusculas, so quando o que vem
+     * antes tambem e maiusculo (ASP.NET, VB.NET). "Java.SQL" e "fim.Tambem"
+     * continuam sendo separador.
      */
     private boolean isDottedName(String text, int dot) {
+        if (dot + 1 < text.length() && dot > 0
+                && Character.isLetterOrDigit(text.charAt(dot - 1))
+                && Character.isLowerCase(text.charAt(dot + 1))) {
+            return true;
+        }
         int end = dot + 1;
         while (end < text.length()) {
             char c = text.charAt(end);
@@ -196,7 +206,18 @@ public final class SentenceSplitter {
             lower &= Character.isLowerCase(c);
             upper &= Character.isUpperCase(c);
         }
-        return lower || upper;
+        return lower || (upper && prefixIsUpperCase(text, dot));
+    }
+
+    private boolean prefixIsUpperCase(String text, int dot) {
+        int start = dot;
+        while (start > 0 && Character.isLetter(text.charAt(start - 1))) {
+            start--;
+            if (!Character.isUpperCase(text.charAt(start))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void addSentence(List<Sentence> result, String text, int[] source, int from, int to) {

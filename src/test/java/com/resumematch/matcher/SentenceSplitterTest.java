@@ -94,6 +94,24 @@ class SentenceSplitterTest {
     }
 
     @Test
+    void pontoColadoEntreNomeEMaiusculaSeparaFrases() {
+        assertThat(sentences("Usei Java.SQL é essencial"))
+                .containsExactly("Usei Java.", "SQL é essencial");
+        assertThat(sentences("Desenvolvi em VB.NET e ADO.NET."))
+                .containsExactly("Desenvolvi em VB.NET e ADO.NET.");
+        assertThat(sentences("Usei .NET no backend."))
+                .containsExactly("Usei .NET no backend.");
+    }
+
+    @Test
+    void naoQuebraEnderecoNoPonto() {
+        assertThat(sentences("Publiquei o codigo em github.com/fulano/api com Java."))
+                .containsExactly("Publiquei o codigo em github.com/fulano/api com Java.");
+        assertThat(sentences("Portfolio em https://fulano.dev/projetos e mais. Fim."))
+                .containsExactly("Portfolio em https://fulano.dev/projetos e mais.", "Fim.");
+    }
+
+    @Test
     void linhaDeContatoNaoSeJuntaComOutras() {
         assertThat(sentences("Victor Douglas\nEstudante de TI | Redes\nvictor@email.com"))
                 .containsExactly("Victor Douglas Estudante de TI | Redes", "victor@email.com");
