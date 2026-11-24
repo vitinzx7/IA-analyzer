@@ -27,7 +27,10 @@ public final class RequirementMatcher {
         if (requirements == null || requirements.isEmpty()) {
             return List.of();
         }
-        List<TermOccurrence> occurrences = dictionary.findIn(resumeText);
+        boolean[] inEmail = PersonalData.emailPositions(resumeText);
+        List<TermOccurrence> occurrences = dictionary.findIn(resumeText).stream()
+                .filter(occurrence -> !inEmail[occurrence.start()])
+                .toList();
         List<Sentence> safeSentences = sentences == null ? List.of() : sentences;
         List<RequirementMatch> result = new ArrayList<>();
         for (String requirement : requirements) {
@@ -52,13 +55,21 @@ public final class RequirementMatcher {
         for (TermOccurrence occurrence : found) {
             Sentence sentence = sentenceFor(occurrence, sentences);
             if (sentence != null && ActionVerbs.contains(sentence.text())) {
-                return new RequirementMatch(requirement, MatchStatus.MATCH, sentence.text());
+                return new RequirementMatch(requirement, MatchStatus.MATCH, evidence(sentence.text()));
             }
         }
 
         Sentence sentence = sentenceFor(found.getFirst(), sentences);
         String evidence = sentence != null ? sentence.text() : found.getFirst().matchedText();
-        return new RequirementMatch(requirement, MatchStatus.PARTIAL, evidence);
+        return new RequirementMatch(requirement, MatchStatus.PARTIAL, evidence(evidence));
+    }
+
+    /**
+     * A evidencia vai para a tela e para o CSV; e-mail e telefone saem daqui
+     * ja mascarados.
+     */
+    private String evidence(String text) {
+        return PersonalData.mask(text);
     }
 
     private Sentence sentenceFor(TermOccurrence occurrence, List<Sentence> sentences) {

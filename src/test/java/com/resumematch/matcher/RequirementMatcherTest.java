@@ -139,6 +139,30 @@ class RequirementMatcherTest {
     }
 
     @Test
+    void termoNaLinhaSeguinteAUmaAnotacaoContinuaMatch() {
+        assertThat(match("• Implementei endpoints com @RestController e\nSpring Boot no backend.",
+                "Spring Boot").getFirst().status()).isEqualTo(MatchStatus.MATCH);
+        assertThat(match("• Desenvolvi a API em Java | camada de servico e\nPostgreSQL como banco.",
+                "PostgreSQL").getFirst().status()).isEqualTo(MatchStatus.MATCH);
+    }
+
+    @Test
+    void evidenciaSaiSemEmailETelefone() {
+        RequirementMatch result = match(
+                "Victor | Desenvolvedor Java | victor@email.com | (61) 99999-9999", "Java").getFirst();
+
+        assertThat(result.evidence())
+                .isEqualTo("Victor | Desenvolvedor Java | [email] | [telefone]")
+                .doesNotContain("victor@email.com", "99999");
+    }
+
+    @Test
+    void termoDentroDeEmailNaoEhEvidencia() {
+        assertThat(match("Contato: dev.java@empresa.com", "Java").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+    }
+
+    @Test
     void grupoDeAlternativasAceitaQualquerOpcao() {
         List<RequirementMatch> result = match(
                 "Desenvolvi e publiquei no Azure Container Apps.", "Azure / AWS / GCP");

@@ -116,6 +116,18 @@ class AnalysisServiceTest {
     }
 
     @Test
+    void logRecebeEvidenciaSemDadoDeContato() {
+        List<AnalysisResult> logged = new ArrayList<>();
+        AnalysisService loggedService = service(logged::add);
+
+        loggedService.analyze("Victor | Desenvolvedor Java | victor@email.com", "Java");
+
+        assertThat(logged.getFirst().requirements().getFirst().evidence())
+                .contains("[email]")
+                .doesNotContain("victor@email.com");
+    }
+
+    @Test
     void semRequisitosReconhecidosDevolveScoreZero() {
         AnalysisResult result = service.analyze(
                 "Desenvolvi uma API em Java.", "Cozinheiro com experiencia em restaurante");
