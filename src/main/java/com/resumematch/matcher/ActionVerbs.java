@@ -23,6 +23,13 @@ public final class ActionVerbs {
     private ActionVerbs() {
     }
 
+    /**
+     * Diz se o texto tem algum verbo da lista, negado ou nao.
+     */
+    public static boolean mentions(String text) {
+        return text != null && PATTERN.matcher(TextNormalizer.normalize(text)).find();
+    }
+
     public static boolean contains(String sentence) {
         if (sentence == null) {
             return false;

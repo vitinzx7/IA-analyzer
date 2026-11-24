@@ -12,8 +12,9 @@ import com.resumematch.dictionary.TermOccurrence;
  * Classifica cada requisito pela forca da evidencia no curriculo.
  *
  * MATCH exige o termo numa frase com verbo de acao; PARTIAL aceita o termo em
- * qualquer frase; MISSING significa que o termo nao aparece. Um requisito de
- * alternativas ("Azure / AWS / GCP") e satisfeito por qualquer uma das opcoes.
+ * qualquer frase; MISSING significa que o termo nao aparece, ou so aparece
+ * negado ("sem Docker", "Nunca utilizei AWS"). Um requisito de alternativas
+ * ("Azure / AWS / GCP") e satisfeito por qualquer uma das opcoes.
  *
  * Cada frase e avaliada uma vez so por analise. Avaliar de novo para cada
  * ocorrencia deixava o tempo quadratico num texto com muitas repeticoes.
@@ -45,17 +46,21 @@ public final class RequirementMatcher {
     }
 
     /**
-     * Ocorrencias que valem como evidencia, na ordem do texto. Fica de fora o
-     * termo dentro de e-mail.
+     * Ocorrencias que valem como evidencia, na ordem do texto. Ficam de fora o
+     * termo dentro de e-mail e o termo negado.
      */
     private List<Mention> mentions(String text, List<Sentence> sentences) {
         boolean[] inEmail = PersonalData.emailPositions(text);
+        TermNegation negation = new TermNegation(text);
         List<Mention> mentions = new ArrayList<>();
         for (TermOccurrence occurrence : dictionary.findIn(text)) {
             if (inEmail[occurrence.start()]) {
                 continue;
             }
-            mentions.add(new Mention(occurrence, sentenceFor(occurrence, sentences)));
+            Sentence sentence = sentenceFor(occurrence, sentences);
+            if (!negation.negates(occurrence, sentence)) {
+                mentions.add(new Mention(occurrence, sentence));
+            }
         }
         return mentions;
     }

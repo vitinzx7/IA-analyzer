@@ -159,6 +159,52 @@ class RequirementMatcherTest {
     }
 
     @Test
+    void termoNegadoLogoAntesNaoEhEvidencia() {
+        assertThat(match("Desenvolvi sistemas sem Docker.", "Docker").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+        assertThat(match("Desenvolvi sistemas sem o Docker.", "Docker").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+    }
+
+    @Test
+    void oracaoComVerboNegadoNaoEhEvidencia() {
+        assertThat(match("Nunca utilizei AWS.", "AWS").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+        assertThat(match("Não configurei Kubernetes.", "Kubernetes").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+    }
+
+    @Test
+    void negacaoValeSoNaPropriaOracao() {
+        List<RequirementMatch> result = match(
+                "Nunca utilizei AWS, mas configurei Azure.", "AWS", "Azure");
+
+        assertThat(result).extracting(RequirementMatch::status)
+                .containsExactly(MatchStatus.MISSING, MatchStatus.MATCH);
+        assertThat(match("Sem experiência prévia, desenvolvi uma API em Java.", "Java")
+                .getFirst().status()).isEqualTo(MatchStatus.MATCH);
+    }
+
+    @Test
+    void semQueNaoNegaOTermoNaoAtrapalha() {
+        assertThat(match("Configurei pipelines sem downtime com Jenkins.", "Jenkins")
+                .getFirst().status()).isEqualTo(MatchStatus.MATCH);
+
+        List<RequirementMatch> result = match("Desenvolvi APIs em Java sem Spring.", "Java", "Spring Framework");
+        assertThat(result).extracting(RequirementMatch::status)
+                .containsExactly(MatchStatus.MATCH, MatchStatus.MISSING);
+    }
+
+    @Test
+    void mencaoNegadaNaoApagaOutraMencaoValida() {
+        RequirementMatch result = match(
+                "Tecnologias: Docker.\nDesenvolvi sistemas sem Docker.", "Docker").getFirst();
+
+        assertThat(result.status()).isEqualTo(MatchStatus.PARTIAL);
+        assertThat(result.evidence()).isEqualTo("Tecnologias: Docker.");
+    }
+
+    @Test
     void textoComMuitasRepeticoesNaoFicaQuadratico() {
         String repeated = "Java, ".repeat(30_000);
         String manySentences = "Tecnologias: Java. ".repeat(10_000);
