@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
     <title>Resume Match</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f766e'/%3E%3Cpath d='M9 17l5 5 9-11' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -12,56 +14,88 @@
         <p class="eyebrow">POC de análise de currículo</p>
         <h1>Seu currículo combina com esta vaga?</h1>
         <p class="subtitle">
-            Envie o currículo em PDF e cole a descrição da vaga. O resultado mostra
-            o score e o trecho do currículo que sustenta cada requisito.
+            Envie o currículo e cole a descrição da vaga. O resultado mostra o score
+            e o trecho do currículo que sustenta cada requisito.
         </p>
     </header>
 
     <section class="card">
-        <form id="analysis-form">
-            <div class="field">
-                <label for="resume">Currículo em PDF</label>
-                <input id="resume" name="resume" type="file" accept=".pdf,application/pdf" required>
-                <p class="hint">O PDF não é armazenado. A análise roda localmente.</p>
-            </div>
+        <form id="analysis-form" novalidate>
+            <fieldset class="field">
+                <legend>Currículo</legend>
+                <div class="tabs" role="tablist" aria-label="Formato do currículo">
+                    <button type="button" class="tab" role="tab" id="tab-pdf"
+                            aria-selected="true" aria-controls="panel-pdf">PDF</button>
+                    <button type="button" class="tab" role="tab" id="tab-text"
+                            aria-selected="false" aria-controls="panel-text" tabindex="-1">Colar texto</button>
+                </div>
+
+                <div id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf">
+                    <label class="dropzone" id="dropzone" for="resume">
+                        <input id="resume" name="resume" type="file" accept=".pdf,application/pdf"
+                               class="visually-hidden">
+                        <span class="dropzone-icon" aria-hidden="true">PDF</span>
+                        <span class="dropzone-title" id="file-label">Arraste o PDF aqui ou clique para escolher</span>
+                        <span class="hint" id="file-detail">Até 10 MB. O PDF não é armazenado.</span>
+                    </label>
+                </div>
+
+                <div id="panel-text" role="tabpanel" aria-labelledby="tab-text" hidden>
+                    <label for="resume-text" class="visually-hidden">Texto do currículo</label>
+                    <textarea id="resume-text" rows="10"
+                              placeholder="Cole aqui o texto do currículo..."></textarea>
+                    <p class="hint"><span id="resume-count">0</span> / 200.000 caracteres</p>
+                </div>
+            </fieldset>
 
             <div class="field">
                 <label for="job">Descrição da vaga</label>
-                <textarea id="job" name="job" rows="10" required
+                <textarea id="job" name="job" rows="10"
                           placeholder="Cole aqui a descrição da vaga..."></textarea>
-                <p class="hint"><span id="job-count">0</span> caracteres</p>
+                <p class="hint">
+                    <span id="job-count">0</span> / 50.000 caracteres
+                    <span class="kbd-hint">· <kbd>Ctrl</kbd> + <kbd>Enter</kbd> analisa</span>
+                </p>
             </div>
 
-            <button id="submit" type="submit">Analisar</button>
+            <button id="submit" type="submit">
+                <span class="spinner" aria-hidden="true"></span>
+                <span id="submit-label">Analisar</span>
+            </button>
         </form>
         <p id="error" class="error" role="alert" hidden></p>
     </section>
 
-    <section id="result" class="result" hidden>
+    <section id="result" class="result" hidden aria-live="polite">
         <div class="card score-card">
             <div class="score-head">
                 <div>
                     <p class="eyebrow">Score</p>
-                    <p class="score"><span id="score">0</span><span class="score-max">/100</span></p>
+                    <p class="score"><span id="score">0</span><span class="score-max" id="score-max">/100</span></p>
                 </div>
-                <p class="hint" id="recognized"></p>
+                <ul class="tally" id="tally" aria-label="Requisitos por status"></ul>
             </div>
             <div class="score-bar" role="progressbar" aria-label="Score da análise"
                  aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 <span id="score-fill"></span>
             </div>
+            <p class="hint" id="recognized"></p>
             <p id="summary" class="summary"></p>
+            <div class="actions">
+                <button id="copy" class="secondary" type="button">Copiar resultado</button>
+                <button id="again" class="secondary" type="button">Editar e analisar de novo</button>
+                <span id="copy-status" class="hint" role="status"></span>
+            </div>
         </div>
 
         <div id="groups" class="groups"></div>
-
-        <button id="again" class="secondary" type="button">Analisar outro currículo</button>
     </section>
 
     <footer class="footer">
         <p>
             POC: o score não é uma probabilidade de contratação nem uma simulação de ATS.
-            Requisitos fora do dicionário não entram no cálculo.
+            Requisitos fora do dicionário não entram no cálculo. E-mail e telefone
+            aparecem mascarados na evidência.
         </p>
     </footer>
 </main>

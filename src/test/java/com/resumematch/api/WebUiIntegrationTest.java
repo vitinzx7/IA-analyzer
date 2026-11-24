@@ -35,6 +35,14 @@ class WebUiIntegrationTest {
         assertThat(get("/app.js").body()).contains("/api/analyze");
     }
 
+    @Test
+    void paginaAceitaPdfOuTextoColado() throws Exception {
+        assertThat(get("/").body())
+                .contains("id=\"resume\"")
+                .contains("id=\"resume-text\"");
+        assertThat(get("/app.js").body()).contains("/api/analyze/text");
+    }
+
     private HttpResponse<String> get(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + path))
