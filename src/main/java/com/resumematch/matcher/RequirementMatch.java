@@ -1,13 +1,17 @@
 package com.resumematch.matcher;
 
+import java.util.List;
+
 /**
  * Decisao do matcher para um requisito da vaga.
  *
  * @param priority peso do requisito no score; quem nao informa recebe
  *        REQUIRED, que vale 1
+ * @param components decisao de cada parte, quando o requisito e um conjunto;
+ *        vazia nos demais
  */
 public record RequirementMatch(String name, MatchStatus status, String evidence,
-        RequirementPriority priority) {
+        RequirementPriority priority, List<ComponentMatch> components) {
 
     public RequirementMatch {
         if (status == null) {
@@ -23,6 +27,12 @@ public record RequirementMatch(String name, MatchStatus status, String evidence,
         }
 
         priority = priority == null ? RequirementPriority.REQUIRED : priority;
+        components = components == null ? List.of() : List.copyOf(components);
+    }
+
+    public RequirementMatch(String name, MatchStatus status, String evidence,
+            RequirementPriority priority) {
+        this(name, status, evidence, priority, List.of());
     }
 
     public RequirementMatch(String name, MatchStatus status, String evidence) {

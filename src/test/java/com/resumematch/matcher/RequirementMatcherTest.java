@@ -20,6 +20,47 @@ class RequirementMatcherTest {
         return matcher.match(List.of(requirements), resume, splitter.split(resume));
     }
 
+    private RequirementMatch matchComposite(String resume, String... components) {
+        JobRequirement composite = JobRequirement.composite(List.of(components), RequirementPriority.REQUIRED);
+        return matcher.matchRequirements(List.of(composite), resume, splitter.split(resume)).getFirst();
+    }
+
+    @Test
+    void conjuntoComTodasAsPartesComAcaoEhMatch() {
+        RequirementMatch result = matchComposite(
+                "Configurei DNS, DHCP e TCP/IP no laboratorio.", "TCP/IP", "DNS", "DHCP");
+
+        assertThat(result.name()).isEqualTo("TCP/IP + DNS + DHCP");
+        assertThat(result.status()).isEqualTo(MatchStatus.MATCH);
+        assertThat(result.components()).extracting(ComponentMatch::status)
+                .containsOnly(MatchStatus.MATCH);
+    }
+
+    @Test
+    void conjuntoComParteDasPartesEhPartialComEvidenciaDaParteComAcao() {
+        RequirementMatch result = matchComposite(
+                "Tecnologias: TCP/IP.\nConfigurei o DNS do laboratorio.", "TCP/IP", "DNS", "DHCP");
+
+        assertThat(result.status()).isEqualTo(MatchStatus.PARTIAL);
+        assertThat(result.evidence()).isEqualTo("Configurei o DNS do laboratorio.");
+        assertThat(result.components()).extracting(ComponentMatch::status)
+                .containsExactly(MatchStatus.PARTIAL, MatchStatus.MATCH, MatchStatus.MISSING);
+    }
+
+    @Test
+    void conjuntoSemNenhumaParteEhMissing() {
+        RequirementMatch result = matchComposite("Desenvolvi uma API em Java.", "TCP/IP", "DNS");
+
+        assertThat(result.status()).isEqualTo(MatchStatus.MISSING);
+        assertThat(result.evidence()).isNull();
+        assertThat(result.components()).hasSize(2);
+    }
+
+    @Test
+    void requisitoSimplesNaoTemPartes() {
+        assertThat(match("Desenvolvi uma API em Java.", "Java").getFirst().components()).isEmpty();
+    }
+
     @Test
     void mantemAPrioridadeDoRequisito() {
         String resume = "Desenvolvi uma API em Java.";

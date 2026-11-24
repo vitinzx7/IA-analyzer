@@ -92,6 +92,22 @@ class AnalysisControllerTest {
     }
 
     @Test
+    void mandaAsPartesDoConjunto() throws Exception {
+        mockMvc.perform(post("/api/analyze/text")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"resume":"Configurei o DNS do laboratorio.",
+                         "job":"Protocolos (TCP/IP, DNS, DHCP)."}
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requirements[0].name").value("TCP/IP + DNS + DHCP"))
+                .andExpect(jsonPath("$.requirements[0].status").value("PARTIAL"))
+                .andExpect(jsonPath("$.requirements[0].components[1].name").value("DNS"))
+                .andExpect(jsonPath("$.requirements[0].components[1].status").value("MATCH"))
+                .andExpect(jsonPath("$.requirements[0].components[2].status").value("MISSING"));
+    }
+
+    @Test
     void rejeitaJsonMalformado() throws Exception {
         mockMvc.perform(post("/api/analyze/text")
                 .contentType(MediaType.APPLICATION_JSON)

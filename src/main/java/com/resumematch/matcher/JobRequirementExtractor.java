@@ -1,16 +1,19 @@
 package com.resumematch.matcher;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.resumematch.dictionary.TechnologyDictionary;
 import com.resumematch.dictionary.TermOccurrence;
+import com.resumematch.dictionary.TextNormalizer;
 
 /**
  * Extrai os requisitos reconheciveis de uma descricao de vaga.
@@ -25,16 +28,27 @@ import com.resumematch.dictionary.TermOccurrence;
  * requisito de alternativas, como "Azure / AWS / GCP". So o trecho final da
  * lista que for todo da mesma familia e agrupado; o resto continua separado.
  * Em "Java, Docker, Azure, AWS ou GCP" saem Java, Docker e o grupo de nuvem.
+ *
+ * Dois ou mais termos dentro do mesmo parentese viram um requisito so, para
+ * que "noções de redes (TCP/IP, DNS, DHCP)" nao pese como tres. Com "ex.",
+ * "como", "etc." ou "similares" no parentese, a lista e de exemplos e vira
+ * alternativas; sem isso, vira um conjunto (ver {@link JobRequirement}).
  */
 public final class JobRequirementExtractor {
 
     private static final Pattern COMMA_GAP = Pattern.compile("\\s*,\\s*");
     private static final Pattern OR_GAP = Pattern.compile(
             "\\s*,?\\s*(?:ou|e/ou)\\s*|\\s*/\\s*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PARENTHESES = Pattern.compile("\\(([^()]*)\\)");
+    private static final Pattern EXAMPLE_CUE = Pattern.compile(
+            "\\b(?:ex|exemplo|exemplos|como|similar|similares|etc|outr[oa]s|afins|equivalentes?)\\b");
 
     private enum Gap { COMMA, OR, OTHER }
 
-    private record Item(List<String> technologies, RequirementPriority priority) {
+    private enum Kind { SINGLE, ANY, ALL }
+
+    private record Item(List<String> technologies, RequirementPriority priority, Kind kind,
+            int position) {
     }
 
     private final TechnologyDictionary dictionary;
@@ -64,21 +78,48 @@ public final class JobRequirementExtractor {
                 next++;
             }
             if (segment.section() != JobSection.IGNORED && first < next) {
-                addSegment(jobText, occurrences.subList(first, next), segment.priority(), items);
+                addSegment(jobText, segment, occurrences.subList(first, next), items);
             }
         }
         return requirements(items);
     }
 
-    private void addSegment(String jobText, List<TermOccurrence> occurrences,
-            RequirementPriority priority, List<Item> items) {
+    private void addSegment(String jobText, JobSegments.Segment segment,
+            List<TermOccurrence> occurrences, List<Item> items) {
+        RequirementPriority priority = segment.priority();
+        List<Item> segmentItems = new ArrayList<>();
+        List<TermOccurrence> loose = new ArrayList<>(occurrences);
+
+        Matcher parentheses = PARENTHESES.matcher(jobText).region(segment.start(), segment.end());
+        while (parentheses.find()) {
+            int open = parentheses.start();
+            int close = parentheses.end();
+            List<TermOccurrence> inside = occurrences.stream()
+                    .filter(occurrence -> occurrence.start() > open && occurrence.end() < close)
+                    .toList();
+            List<String> technologies = distinct(technologies(inside));
+            if (technologies.size() < 2) {
+                continue;
+            }
+            if (EXAMPLE_CUE.matcher(TextNormalizer.normalize(parentheses.group(1))).find()) {
+                segmentItems.add(new Item(technologies, priority, Kind.ANY, open));
+            } else if (TechnologyFamilies.sameFamily(technologies) && hasOrGap(jobText, inside)) {
+                continue;
+            } else {
+                segmentItems.add(new Item(technologies, priority, Kind.ALL, open));
+            }
+            loose.removeAll(inside);
+        }
+
         int runStart = 0;
-        for (int i = 1; i <= occurrences.size(); i++) {
-            if (i == occurrences.size() || gap(jobText, occurrences, i) == Gap.OTHER) {
-                addList(jobText, occurrences.subList(runStart, i), priority, items);
+        for (int i = 1; i <= loose.size(); i++) {
+            if (i == loose.size() || gap(jobText, loose, i) == Gap.OTHER) {
+                addList(jobText, loose.subList(runStart, i), priority, segmentItems);
                 runStart = i;
             }
         }
+        segmentItems.sort(Comparator.comparingInt(Item::position));
+        items.addAll(segmentItems);
     }
 
     /**
@@ -98,55 +139,71 @@ public final class JobRequirementExtractor {
             while (end + 1 < list.size() && gap(jobText, list, end + 1) == Gap.OR) {
                 end++;
             }
-            addCandidate(technologies(list, segmentStart, end + 1), priority, items);
+            addCandidate(list.subList(segmentStart, end + 1), priority, items);
             segmentStart = end + 1;
             k = end + 2;
         }
         for (int i = segmentStart; i < list.size(); i++) {
-            items.add(new Item(List.of(list.get(i).technology()), priority));
+            items.add(single(list.get(i), priority));
         }
     }
 
-    private void addCandidate(List<String> terms, RequirementPriority priority, List<Item> items) {
+    private void addCandidate(List<TermOccurrence> terms, RequirementPriority priority,
+            List<Item> items) {
         int groupStart = terms.size();
         for (int start = 0; start < terms.size() - 1; start++) {
-            if (TechnologyFamilies.sameFamily(distinct(terms.subList(start, terms.size())))) {
+            if (TechnologyFamilies.sameFamily(distinct(technologies(terms.subList(start, terms.size()))))) {
                 groupStart = start;
                 break;
             }
         }
         for (int i = 0; i < groupStart; i++) {
-            items.add(new Item(List.of(terms.get(i)), priority));
+            items.add(single(terms.get(i), priority));
         }
         if (groupStart < terms.size()) {
-            items.add(new Item(distinct(terms.subList(groupStart, terms.size())), priority));
+            List<TermOccurrence> group = terms.subList(groupStart, terms.size());
+            items.add(new Item(distinct(technologies(group)), priority, Kind.ANY,
+                    group.getFirst().start()));
         }
     }
 
     /**
-     * Uma tecnologia que ja esta num grupo nao entra de novo sozinha, mesmo que
-     * apareca antes do grupo no texto da vaga. O requisito que aparece em mais
-     * de um trecho fica com a maior prioridade entre eles.
+     * Uma tecnologia que ja esta num grupo ou conjunto nao entra de novo
+     * sozinha, mesmo que apareca antes dele no texto da vaga. O requisito que
+     * aparece em mais de um trecho fica com a maior prioridade entre eles.
      */
     private List<JobRequirement> requirements(List<Item> items) {
         Set<String> grouped = new HashSet<>();
-        items.stream().filter(item -> item.technologies().size() > 1)
+        items.stream().filter(item -> item.kind() != Kind.SINGLE)
                 .forEach(item -> grouped.addAll(item.technologies()));
 
-        Map<String, RequirementPriority> requirements = new LinkedHashMap<>();
+        Map<String, JobRequirement> requirements = new LinkedHashMap<>();
         for (Item item : items) {
-            List<String> technologies = item.technologies();
-            if (technologies.size() > 1) {
-                requirements.merge(RequirementAlternatives.join(technologies), item.priority(),
-                        RequirementPriority::highest);
-            } else if (!grouped.contains(technologies.getFirst())) {
-                requirements.merge(technologies.getFirst(), item.priority(),
-                        RequirementPriority::highest);
+            JobRequirement requirement = switch (item.kind()) {
+                case ALL -> JobRequirement.composite(item.technologies(), item.priority());
+                case ANY -> new JobRequirement(
+                        RequirementAlternatives.join(item.technologies()), item.priority());
+                case SINGLE -> grouped.contains(item.technologies().getFirst())
+                        ? null
+                        : new JobRequirement(item.technologies().getFirst(), item.priority());
+            };
+            if (requirement != null) {
+                requirements.merge(requirement.name(), requirement, (kept, other) ->
+                        new JobRequirement(kept.name(),
+                                RequirementPriority.highest(kept.priority(), other.priority()),
+                                kept.components()));
             }
         }
-        return requirements.entrySet().stream()
-                .map(entry -> new JobRequirement(entry.getKey(), entry.getValue()))
-                .toList();
+        return List.copyOf(requirements.values());
+    }
+
+    private boolean hasOrGap(String jobText, List<TermOccurrence> occurrences) {
+        for (int i = 1; i < occurrences.size(); i++) {
+            if (gap(jobText, occurrences, i) == Gap.OR) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Gap gap(String jobText, List<TermOccurrence> occurrences, int index) {
@@ -161,8 +218,12 @@ public final class JobRequirementExtractor {
         return Gap.OTHER;
     }
 
-    private static List<String> technologies(List<TermOccurrence> list, int from, int to) {
-        return list.subList(from, to).stream().map(TermOccurrence::technology).toList();
+    private static Item single(TermOccurrence occurrence, RequirementPriority priority) {
+        return new Item(List.of(occurrence.technology()), priority, Kind.SINGLE, occurrence.start());
+    }
+
+    private static List<String> technologies(List<TermOccurrence> occurrences) {
+        return occurrences.stream().map(TermOccurrence::technology).toList();
     }
 
     private static List<String> distinct(List<String> terms) {

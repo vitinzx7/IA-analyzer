@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -145,6 +146,59 @@ class JobRequirementExtractorTest {
                 .containsExactly(
                         new JobRequirement("Java", REQUIRED),
                         new JobRequirement("Docker", REQUIRED));
+    }
+
+    @Test
+    void termosEntreParentesesViramUmConjunto() {
+        assertThat(extractor.requirements("Noções de redes (TCP/IP, DNS, DHCP)."))
+                .containsExactly(
+                        new JobRequirement("Redes de Computadores", REQUIRED),
+                        new JobRequirement("TCP/IP + DNS + DHCP", REQUIRED,
+                                List.of("TCP/IP", "DNS", "DHCP")));
+        assertThat(extractor.requirements("Sistemas operacionais (Windows/Linux)"))
+                .containsExactly(new JobRequirement("Windows + Linux", REQUIRED,
+                        List.of("Windows", "Linux")));
+    }
+
+    @Test
+    void parentesesComAlternativasDaMesmaFamiliaContinuaAlternativa() {
+        assertThat(extractor.requirements("Noções de nuvem (AWS, Azure ou GCP)."))
+                .containsExactly(new JobRequirement("AWS / Azure / GCP", REQUIRED));
+    }
+
+    @Test
+    void parentesesComExemplosViraAlternativa() {
+        assertThat(extractor.extract("Ferramentas de RPA (ex.: UiPath, Blue Prism ou similares)."))
+                .containsExactly("RPA", "UiPath / Blue Prism");
+        assertThat(extractor.extract("Linguagens ou scripts (Python, VBA, SQL, etc.)."))
+                .containsExactly("Python / VBA / SQL");
+    }
+
+    @Test
+    void parentesesComUmTermoSoNaoMudaNada() {
+        assertThat(extractor.extract("Automacoes com RPA (Robotic Process Automation) e Docker (containers)."))
+                .containsExactly("RPA", "Docker");
+    }
+
+    @Test
+    void termoDoConjuntoNaoEntraDeNovoSozinho() {
+        assertThat(extractor.extract("Conhecimento em Linux. Sistemas operacionais (Windows/Linux)."))
+                .containsExactly("Windows + Linux");
+    }
+
+    @Test
+    void leParentesesDeVagaCopiadaDoLinkedin() throws IOException {
+        String job = Files.readString(Path.of("src/test/resources/vagas/vaga1_estagioTI.txt"));
+
+        assertThat(extractor.requirements(job)).containsExactly(
+                new JobRequirement("Help Desk", REQUIRED),
+                new JobRequirement("RPA", REQUIRED),
+                new JobRequirement("Windows + Linux", REQUIRED, List.of("Windows", "Linux")),
+                new JobRequirement("Redes de Computadores", REQUIRED),
+                new JobRequirement("Hardware", REQUIRED),
+                new JobRequirement("Microsoft Office", REQUIRED),
+                new JobRequirement("UiPath / Automation Anywhere / Blue Prism", REQUIRED),
+                new JobRequirement("Python / VBA / SQL", PREFERRED));
     }
 
     @Test

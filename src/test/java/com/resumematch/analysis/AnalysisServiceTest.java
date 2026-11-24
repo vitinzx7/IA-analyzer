@@ -70,6 +70,19 @@ class AnalysisServiceTest {
     }
 
     @Test
+    void conjuntoEntreParentesesValeUmRequisitoNoScore() {
+        AnalysisResult result = service.analyze(
+                "Desenvolvi uma API em Java. Configurei o DNS do laboratorio.",
+                "Requisitos: Java e protocolos (TCP/IP, DNS, DHCP).");
+
+        assertThat(result.requirements()).extracting(r -> r.name())
+                .containsExactly("Java", "TCP/IP + DNS + DHCP");
+        assertThat(result.requirements()).extracting(r -> r.status())
+                .containsExactly(MatchStatus.MATCH, MatchStatus.PARTIAL);
+        assertThat(result.score()).isEqualTo(75.0);
+    }
+
+    @Test
     void diferencialAusentePesaMetadeNoScore() {
         AnalysisResult result = service.analyze(
                 "Desenvolvi uma API em Java.",

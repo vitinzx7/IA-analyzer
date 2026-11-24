@@ -1,6 +1,7 @@
 package com.resumematch.matcher;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,8 @@ import com.resumematch.dictionary.TermOccurrence;
  * MATCH exige o termo numa frase com verbo de acao; PARTIAL aceita o termo em
  * qualquer frase; MISSING significa que o termo nao aparece, ou so aparece
  * negado ("sem Docker", "Nunca utilizei AWS"). Um requisito de alternativas
- * ("Azure / AWS / GCP") e satisfeito por qualquer uma das opcoes.
+ * ("Azure / AWS / GCP") e satisfeito por qualquer uma das opcoes; um conjunto
+ * ("TCP/IP + DNS + DHCP") e avaliado parte por parte.
  *
  * Cada frase e avaliada uma vez so por analise. Avaliar de novo para cada
  * ocorrencia deixava o tempo quadratico num texto com muitas repeticoes.
@@ -54,11 +56,40 @@ public final class RequirementMatcher {
         Map<Sentence, Boolean> hasAction = new IdentityHashMap<>();
         List<RequirementMatch> result = new ArrayList<>();
         for (JobRequirement requirement : requirements) {
+            if (requirement.isComposite()) {
+                result.add(matchComposite(requirement, mentions, hasAction));
+                continue;
+            }
             Found found = find(RequirementAlternatives.options(requirement.name()), mentions, hasAction);
             result.add(new RequirementMatch(requirement.name(), found.status(), found.evidence(),
                     requirement.priority()));
         }
         return List.copyOf(result);
+    }
+
+    /**
+     * Um conjunto so e MATCH quando todas as partes tem frase com acao, e so e
+     * MISSING quando nenhuma parte aparece. O resto e PARTIAL. A evidencia e a
+     * da primeira parte com MATCH, ou da primeira com PARTIAL.
+     */
+    private RequirementMatch matchComposite(JobRequirement requirement, List<Mention> mentions,
+            Map<Sentence, Boolean> hasAction) {
+        List<ComponentMatch> parts = new ArrayList<>();
+        for (String component : requirement.components()) {
+            Found found = find(List.of(component), mentions, hasAction);
+            parts.add(new ComponentMatch(component, found.status(), found.evidence()));
+        }
+        boolean allMatch = parts.stream().allMatch(part -> part.status() == MatchStatus.MATCH);
+        boolean noneFound = parts.stream().allMatch(part -> part.status() == MatchStatus.MISSING);
+        MatchStatus status = allMatch ? MatchStatus.MATCH
+                : noneFound ? MatchStatus.MISSING
+                : MatchStatus.PARTIAL;
+        String evidence = status == MatchStatus.MISSING ? null : parts.stream()
+                .filter(part -> part.status() != MatchStatus.MISSING)
+                .min(Comparator.comparing(ComponentMatch::status))
+                .map(ComponentMatch::evidence)
+                .orElseThrow();
+        return new RequirementMatch(requirement.name(), status, evidence, requirement.priority(), parts);
     }
 
     /**
