@@ -86,6 +86,9 @@ public final class AnalysisCsvLogger implements AnalysisLog {
                 .replace('\n', ' ')
                 .replace('\r', ' ')
                 .strip();
+        if (!clean.isEmpty() && "=+-@\t".indexOf(clean.charAt(0)) >= 0) {
+            clean = "'" + clean;
+        }
         if (clean.contains(",") || clean.contains("\"")) {
             return "\"" + clean.replace("\"", "\"\"") + "\"";
         }

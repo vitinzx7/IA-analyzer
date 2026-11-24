@@ -85,4 +85,15 @@ class AnalysisCsvLoggerTest {
 
         assertThat(Files.exists(file)).isTrue();
     }
+
+    @Test
+    void neutralizaFormulaCsvNoInicioDaEvidencia() throws Exception {
+        Path file = tempDir.resolve("analises.csv");
+        AnalysisCsvLogger logger = new AnalysisCsvLogger(file, true);
+
+        logger.log(result(new RequirementMatch("Java", MatchStatus.PARTIAL, "=HYPERLINK(\"http://x\",\"Java\")")));
+
+        assertThat(Files.readString(file))
+                .contains(",\"'=HYPERLINK(\"\"http://x\"\",\"\"Java\"\")\"");
+    }
 }
