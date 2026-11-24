@@ -83,11 +83,15 @@ Cada requisito reconhecido recebe um status:
 ```
 MATCH   = o termo aparece em uma frase com verbo de ação em 1ª pessoa do passado
 PARTIAL = o termo aparece, mas só em listas ou frases sem verbo de ação
-MISSING = o termo não aparece
+MISSING = o termo não aparece, ou só aparece negado ("sem Docker",
+          "Nunca utilizei AWS")
 ```
 
 Os verbos considerados são: desenvolvi, implementei, criei, publiquei, realizei,
 utilizei, configurei, apoiei, mantive, escrevi.
+
+Uma vaga que diga "Azure, AWS ou GCP" gera um único requisito de alternativas,
+satisfeito por qualquer uma das três (ver D11 em `docs/DECISOES.md`).
 
 O score é a média ponderada dos status, em uma escala de 0 a 100:
 
@@ -97,7 +101,7 @@ score = pontos obtidos / pontos possíveis × 100
 ```
 
 O resultado é arredondado para uma casa decimal. Vaga sem nenhum requisito
-reconhecido resulta em score `0` e um aviso explícito.
+reconhecido não tem nota: a API devolve `"score": null` e o resumo explica.
 
 O resumo é gerado localmente com frases condicionais. O sistema não sabe o que a
 pessoa realmente viveu, então nunca manda inventar experiência: quando sugere
@@ -114,6 +118,9 @@ data,requisito,status,evidencia
 ```
 
 O arquivo é local, está no `.gitignore` e pode conter trechos do currículo.
+E-mail e telefone saem mascarados como `[email]` e `[telefone]`, e um campo que
+comece com `=`, `+`, `-` ou `@` recebe um apóstrofo para não virar fórmula na
+planilha.
 Para desligar o registro ou mudar o caminho:
 
 ```properties

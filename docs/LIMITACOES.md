@@ -3,7 +3,7 @@
 Problemas identificados e **não** resolvidos, com o motivo de não terem sido
 resolvidos. Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: contato e privacidade (D2, D12).
+Última atualização: negação do termo, ponto em nomes e score nulo.
 
 Estado: `ABERTA` (não tratada) · `MITIGADA` (tratada em parte) ·
 `RESOLVIDA` (com o bloco que resolveu).
@@ -242,3 +242,49 @@ perder o verbo:
 **Por que não foi tratada:** o pedido cobria e-mail e telefone. CPF e nome
 exigem regra própria, e a exceção para bullets com link ainda não tem caso real
 no CSV.
+
+---
+
+## L14 — Negação só é reconhecida em duas formas · ABERTA
+
+A negação do termo (D1) só pega a negação logo antes do termo ("sem Docker") e
+a oração em que todos os verbos da lista estão negados ("Nunca utilizei AWS").
+Casos que **não** são pegos:
+
+```
+"Desenvolvi o front, sem experiência em Java."  -> Java MATCH (negação longe do termo)
+"Nunca utilizei AWS, GCP ou Azure."             -> GCP e Azure PARTIAL (outra oração
+                                                   por causa da vírgula)
+```
+
+**Por que não foi tratada:** pegar esses casos exige janela de N palavras ou
+análise sintática, e a D1 recusa número arbitrário sem evidência.
+
+---
+
+## L15 — Ponto colado antes de minúscula nunca separa frase · ABERTA
+
+Para não cortar `Node.js` e `github.com/x/y`, um ponto colado entre letra e
+minúscula nunca separa frase. Um erro de digitação como "Desenvolvi a
+API.depois configurei" vira uma frase só.
+
+---
+
+## L16 — Tempo quadrático em texto com muitas repetições · RESOLVIDA
+
+O matcher avaliava o verbo da frase inteira uma vez para cada ocorrência do
+termo. Um texto com o mesmo termo repetido milhares de vezes travava a análise.
+Medido no código anterior (`feature/mvp`, `7b339d3`) e depois da correção, com
+"Java, " repetido N vezes:
+
+```
+N        antes      depois
+2.000    6.656 ms   271 ms (inclui aquecimento da JVM)
+4.000   24.060 ms   121 ms
+8.000   97.178 ms   121 ms
+33.000  > 180 s     426 ms
+```
+
+Resolvido avaliando cada frase e cada oração uma vez só por análise e achando
+a frase de cada ocorrência por busca binária. Um teste com tempo limite de 5 s
+protege contra regressão.

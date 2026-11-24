@@ -3,7 +3,7 @@
 Decisões que já foram tomadas e não devem ser rediscutidas sem evidência nova.
 Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: contato e privacidade (D2, D12).
+Última atualização: negação do termo, ponto em nomes e score nulo.
 
 ---
 
@@ -20,7 +20,7 @@ arbitrário.
 MATCH   = o termo ocorre em ao menos uma frase que contém pelo menos um
           verbo da lista
 PARTIAL = o termo ocorre, mas só em frases sem nenhum verbo da lista
-MISSING = o termo não ocorre
+MISSING = o termo não ocorre, ou só ocorre negado
 ```
 
 Lista de verbos, restrita à **1ª pessoa do passado**: desenvolvi, implementei,
@@ -38,6 +38,24 @@ e exclui os verbos de posse do resumo. Ver o achado O3 em
 última `,` ou `;`). "Nunca utilizei AWS." não é MATCH. "Sem experiência
 prévia, desenvolvi uma API em Java." continua MATCH, porque a negação está em
 outra oração.
+
+**Negação do termo.** Uma ocorrência negada não é evidência nenhuma: não conta
+nem para MATCH nem para PARTIAL. Duas formas contam, sempre na mesma oração:
+
+```
+negação logo antes do termo, artigo opcional
+  "Desenvolvi sistemas sem Docker."      -> Docker MISSING
+  "Desenvolvi sistemas sem o Docker."    -> Docker MISSING
+oração com verbo da lista, todos negados
+  "Nunca utilizei AWS."                  -> AWS MISSING
+  "Nunca utilizei AWS, mas configurei Azure." -> AWS MISSING, Azure MATCH
+```
+
+Antes, "Nunca utilizei AWS." era PARTIAL e somava meio ponto a quem declarou
+não ter a tecnologia. "Sem" que nega outra coisa não atrapalha: em
+"Configurei pipelines sem downtime com Jenkins." o Jenkins continua MATCH.
+Coerente com a regra de não usar janela de N palavras, "sem experiência em
+Java" não é reconhecido como negação (ver L14).
 
 ### D1 — nota de proveniência
 
@@ -98,6 +116,17 @@ as duas coisas aparecem em frases de projeto que quebram de linha.
 
 **Passada 2, separar frases** sobre o texto já remontado, por `.`, `!`, `?` e
 `;`, tratando cada item de bullet como frase própria mesmo sem pontuação final.
+
+O ponto não separa frase quando faz parte de nome ou endereço:
+
+```
+ponto colado entre letra/dígito e minúscula   Node.js, github.com/x/y, fulano.dev
+trecho curto em maiúsculas, prefixo maiúsculo ASP.NET, VB.NET, ADO.NET
+ponto antes de nome curto                     .NET
+```
+
+"Usei Java.SQL é essencial" separa em "Usei Java." e "SQL é essencial": o
+prefixo "Java" não é todo maiúsculo.
 
 ---
 
@@ -169,9 +198,14 @@ MATCH = 1,0 · PARTIAL = 0,5 · MISSING = 0,0
 score = pontos obtidos / total de requisitos reconhecidos × 100
 ```
 
-Arredondado para uma casa decimal. Lista vazia ou nula resulta em `0`. O
-denominador é sempre o número de requisitos **reconhecidos**, não o número de
-requisitos escritos na vaga (ver L2).
+Arredondado para uma casa decimal. O denominador é sempre o número de
+requisitos **reconhecidos**, não o número de requisitos escritos na vaga (ver
+L2).
+
+Quando nenhum requisito é reconhecido, a API devolve `"score": null`, e não
+`0`: não existe nota a calcular, e o resumo já diz isso. O `ScoreCalculator`
+continua devolvendo `0` para lista vazia; quem decide o `null` é o
+`AnalysisService`.
 
 ---
 
