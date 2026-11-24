@@ -3,7 +3,7 @@
 Decisões que já foram tomadas e não devem ser rediscutidas sem evidência nova.
 Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: Bloco 8 + correção de equivalências de termos.
+Última atualização: requisitos de alternativas (D11).
 
 ---
 
@@ -209,6 +209,47 @@ Implementado nos Blocos 6 e 7.
 O upload é validado pelo conteúdo (`%PDF-` nos primeiros bytes), não pela
 extensão. Limites: 10 MB por PDF, 200 mil caracteres de currículo e 50 mil
 caracteres de vaga. Erros usam `ProblemDetail` (RFC 9457).
+
+---
+
+## D11 — Requisitos de alternativas na vaga
+
+Implementado em `JobRequirementExtractor`, `TechnologyFamilies` e
+`RequirementAlternatives`.
+
+Problema real: "Azure, AWS ou GCP" virava três requisitos, e quem tinha só
+Azure recebia dois MISSING falsos.
+
+Regra: na vaga, uma lista separada por vírgulas que termina em "ou" (ou
+"e/ou"), ou termos ligados por "/", vira **um** requisito de alternativas
+somente no trecho final da lista em que todos os termos são da mesma família.
+O resto continua separado.
+
+```
+"Azure, AWS ou GCP"                     -> [Azure / AWS / GCP]
+"Java, Docker, Azure, AWS ou GCP"       -> [Java] [Docker] [Azure / AWS / GCP]
+"Java, Spring Boot, Docker, Git ou GitHub" -> 5 requisitos separados
+"Windows/Linux"                         -> [Windows] [Linux]
+```
+
+Famílias iniciais, pequenas de propósito:
+
+```
+nuvem             Azure, AWS, GCP
+banco relacional  PostgreSQL, MySQL, SQL Server, Oracle
+hospedagem de Git GitHub, GitLab
+```
+
+`Windows/Linux` não agrupa: em vaga de suporte a barra costuma pedir os dois.
+
+O grupo é satisfeito por qualquer opção que tenha evidência, segue a mesma
+regra D1 e vale **1** requisito no score. Uma tecnologia que já está num grupo
+não entra de novo como requisito sozinha, em qualquer ordem do texto.
+
+**Diferença em relação à primeira proposta.** A proposta original mandava
+separar todos os termos quando a lista inteira não fosse da mesma família.
+Isso deixaria "Java, Docker, Azure, AWS ou GCP" com os mesmos dois MISSING
+falsos. Por isso o agrupamento olha só o trecho final da lista.
 
 ---
 

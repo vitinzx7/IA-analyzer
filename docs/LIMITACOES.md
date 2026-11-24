@@ -3,7 +3,7 @@
 Problemas identificados e **não** resolvidos, com o motivo de não terem sido
 resolvidos. Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: Bloco 8 + correção de equivalências de termos.
+Última atualização: requisitos de alternativas (D11).
 
 Estado: `ABERTA` (não tratada) · `MITIGADA` (tratada em parte) ·
 `RESOLVIDA` (com o bloco que resolveu).
@@ -201,3 +201,17 @@ eram rejeitados antes e **não** são regressão.
 Resolvido aceitando uma sequência de dígitos à direita somente quando ela não é
 seguida por letra: `Java21` e `C++11` casam, `Java2EE` continua rejeitado. A
 borda à esquerda e o caso `JavaScript` não mudaram.
+
+---
+
+## L12 — Alternativas dependem de família cadastrada à mão · ABERTA
+
+Só três famílias existem (nuvem, banco relacional, hospedagem de Git). Uma vaga
+com "Java ou Kotlin" ou "React ou Angular" continua gerando dois requisitos, e
+quem tem só um deles recebe um MISSING falso.
+
+A leitura da lista também é por padrão de texto: "ou", "e/ou" e "/" abrem
+alternativa; "e" não. "Azure e/ou AWS" agrupa; "Azure e AWS" não.
+
+**Por que não foi tratada:** crescer as famílias pelos erros vistos no CSV, como
+o dicionário (D3), em vez de prever todos os pares.
