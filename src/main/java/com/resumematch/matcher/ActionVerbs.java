@@ -15,10 +15,28 @@ public final class ActionVerbs {
     private static final Pattern PATTERN = Pattern.compile(
             "\\b(desenvolvi|implementei|criei|publiquei|realizei|utilizei|configurei|apoiei|mantive|escrevi)\\b");
 
+    // A negacao so anula o verbo quando vem logo antes dele, na mesma oracao.
+    // Assim "Sem experiencia previa, desenvolvi..." continua valendo.
+    private static final Pattern NEGATION = Pattern.compile(
+            "\\b(nao|nunca|jamais|sem)\\s*$");
+
     private ActionVerbs() {
     }
 
     public static boolean contains(String sentence) {
-        return sentence != null && PATTERN.matcher(TextNormalizer.normalize(sentence)).find();
+        if (sentence == null) {
+            return false;
+        }
+        String normalized = TextNormalizer.normalize(sentence);
+        var matcher = PATTERN.matcher(normalized);
+        while (matcher.find()) {
+            int clauseStart = Math.max(normalized.lastIndexOf(',', matcher.start()),
+                    normalized.lastIndexOf(';', matcher.start())) + 1;
+            String beforeVerb = normalized.substring(clauseStart, matcher.start());
+            if (!NEGATION.matcher(beforeVerb).find()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

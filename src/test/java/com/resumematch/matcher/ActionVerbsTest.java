@@ -43,4 +43,16 @@ class ActionVerbsTest {
         assertThat(ActionVerbs.contains("")).isFalse();
         assertThat(ActionVerbs.contains("   ")).isFalse();
     }
+
+    @Test
+    void ignoraVerboPrecedidoDeNegacao() {
+        assertThat(ActionVerbs.contains("Nunca utilizei AWS.")).isFalse();
+        assertThat(ActionVerbs.contains("Não configurei Kubernetes.")).isFalse();
+    }
+
+    @Test
+    void negacaoEmOutraOracaoNaoAnulaOVerbo() {
+        assertThat(ActionVerbs.contains("Sem experiência prévia, desenvolvi uma API em Java.")).isTrue();
+        assertThat(ActionVerbs.contains("Não fiz curso; desenvolvi uma API em Java.")).isTrue();
+    }
 }
