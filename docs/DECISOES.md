@@ -3,7 +3,7 @@
 Decisões que já foram tomadas e não devem ser rediscutidas sem evidência nova.
 Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: negação do termo, ponto em nomes e score nulo.
+Última atualização: interface com PDF ou texto e score nulo.
 
 ---
 
@@ -244,7 +244,15 @@ Implementado nos Blocos 6 e 7.
   (texto).
 - `POST /api/analyze/text` recebe JSON `{ "resume": "...", "job": "..." }`.
 - `GET /api/health` responde `{"status":"ok"}`.
-- A interface está em `/` e usa apenas HTML, CSS e JavaScript, sem framework.
+- A interface está em `/` e usa apenas HTML, CSS e JavaScript, sem framework
+  e sem recurso externo (fonte, CDN ou ícone carregado de fora).
+
+A interface aceita o currículo em PDF (seleção ou arrastar) ou como texto
+colado, que usa `/api/analyze/text`. O tamanho do PDF e dos textos é conferido
+no navegador antes do envio, além da validação no servidor. Score `null` é
+mostrado como "Sem nota". O termo é destacado na evidência montando nós de
+texto, nunca HTML a partir do conteúdo do currículo. Apelidos (`k8s`) e
+equivalências (`Spring Boot` para `Spring`) não recebem destaque.
 
 O upload é validado pelo conteúdo (`%PDF-` nos primeiros bytes), não pela
 extensão. Limites: 10 MB por PDF, 200 mil caracteres de currículo e 50 mil

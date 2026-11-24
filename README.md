@@ -23,8 +23,11 @@ e roda inteira na máquina.
 ./mvnw spring-boot:run
 ```
 
-Abra <http://localhost:8080>. Envie o currículo em PDF, cole a descrição da vaga
-e clique em **Analisar**.
+Abra <http://localhost:8080>. Envie o currículo em PDF (ou cole o texto dele na
+aba **Colar texto**), cole a descrição da vaga e clique em **Analisar** ou use
+`Ctrl` + `Enter`. O resultado mostra o score, a contagem por status, o trecho de
+evidência de cada requisito com o termo destacado e um botão para copiar o
+resultado como texto.
 
 Para gerar o JAR:
 
