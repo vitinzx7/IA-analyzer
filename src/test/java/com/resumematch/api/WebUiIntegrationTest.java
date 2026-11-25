@@ -61,6 +61,17 @@ class WebUiIntegrationTest {
                 .contains("analysisId");
     }
 
+    @Test
+    void telaChamaONumeroDeCoberturaTecnica() throws Exception {
+        assertThat(get("/").body())
+                .contains("Cobertura técnica da vaga")
+                .contains("id=\"required-gap\"")
+                .doesNotContain(">Score<");
+        assertThat(get("/app.js").body())
+                .contains("evidenceSection")
+                .contains("resumeEvidence");
+    }
+
     private HttpResponse<String> get(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + path))

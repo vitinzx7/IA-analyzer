@@ -31,6 +31,7 @@ const copyButton = document.querySelector("#copy");
 const copyStatus = document.querySelector("#copy-status");
 const again = document.querySelector("#again");
 const feedbackSummary = document.querySelector("#feedback-summary");
+const requiredGap = document.querySelector("#required-gap");
 
 const DEFAULT_FILE_LABEL = fileLabel.textContent;
 const DEFAULT_FILE_DETAIL = fileDetail.textContent;
@@ -70,6 +71,17 @@ const REASON_LABELS = {
     EDUCATION: "formação: o programa ainda não compara curso",
     LANGUAGE: "idioma: o programa ainda não compara idioma",
     NO_KNOWN_TERM: "nenhum termo do dicionário"
+};
+
+const EVIDENCE_SECTIONS = {
+    EXPERIENCE: "Experiência",
+    PROJECTS: "Projetos",
+    COURSES: "Cursos",
+    EDUCATION: "Formação",
+    SKILLS: "Competências",
+    LANGUAGES: "Idiomas",
+    SUMMARY: "Resumo",
+    HEADER: "Cabeçalho"
 };
 
 const STATUS_MARKS = { MATCH: "✓", PARTIAL: "~", MISSING: "✗" };
@@ -245,7 +257,8 @@ function render(data) {
         summary: data.summary || ""
     };
 
-    scoreElement.textContent = hasScore ? formatScore(score) : "Sem nota";
+    scoreElement.textContent = hasScore ? formatScore(score) : "Sem cálculo";
+    requiredGap.textContent = requiredGapText(requirements);
     scoreElement.parentElement.classList.toggle("no-score", !hasScore);
     scoreMax.hidden = !hasScore;
     tally.hidden = requirements.length === 0;
@@ -263,7 +276,7 @@ function render(data) {
     }));
 
     recognized.textContent = requirements.length === 0
-        ? "Nenhum requisito da vaga foi reconhecido pelo dicionário, então não há nota."
+        ? "Nenhum requisito da vaga foi reconhecido pelo dicionário, então não há cálculo."
         : `${requirements.length} requisito(s) reconhecido(s) pelo dicionário.`;
     summary.textContent = data.summary || "";
     copyStatus.textContent = "";
@@ -352,6 +365,10 @@ function renderRequirement(item) {
 
     if (item.evidence) {
         const evidence = document.createElement("blockquote");
+        const section = EVIDENCE_SECTIONS[item.evidenceSection];
+        if (section) {
+            evidence.append(tag(section, "Seção do currículo de onde veio a evidência"), " ");
+        }
         evidence.append(highlight(item.evidence, options));
         entry.append(evidence);
     } else {
@@ -454,6 +471,28 @@ function newAnalysisId() {
     return `a-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/** Quantos obrigatórios têm alguma evidência e quais não têm nenhuma. */
+function requiredGapText(requirements) {
+    const required = requirements.filter((r) => r.priority !== "PREFERRED");
+    if (required.length === 0) {
+        return "";
+    }
+    const missing = required.filter((r) => r.status === "MISSING");
+    const base = `Obrigatórios com alguma evidência: ${required.length - missing.length} de ${required.length}.`;
+    if (missing.length === 0) {
+        return base;
+    }
+    return `${base} Sem evidência: ${missing.map(displayName).join(", ")}.`;
+}
+
+function displayName(item) {
+    const components = Array.isArray(item.components) ? item.components : [];
+    const names = components.length > 0
+        ? components.map((component) => component.name)
+        : String(item.name).split(ALTERNATIVE_SEPARATOR);
+    return names.join(" · ");
+}
+
 function tag(text, title) {
     const element = document.createElement("span");
     element.className = "tag";
@@ -495,6 +534,16 @@ function renderUnevaluated(items, unknownTerms) {
                 tag(SECTION_LABELS[item.section] || "Vaga", "Seção da vaga"),
                 ` ${REASON_LABELS[item.reason] || ""}`);
             entry.append(text, reason);
+            if (item.resumeEvidence) {
+                const found = document.createElement("blockquote");
+                found.textContent = `No currículo: ${item.resumeEvidence}`;
+                entry.append(found);
+            } else if (item.reason === "EDUCATION" || item.reason === "LANGUAGE") {
+                const missing = document.createElement("p");
+                missing.className = "hint";
+                missing.textContent = "Não encontrei isso no currículo.";
+                entry.append(missing);
+            }
             list.append(entry);
         }
         section.append(list);
@@ -558,7 +607,9 @@ copyButton.addEventListener("click", async () => {
 
 function report(data) {
     const lines = [
-        data.score === null ? "Resume Match: sem nota" : `Resume Match: ${formatScore(data.score)}/100`,
+        data.score === null
+            ? "Resume Match: cobertura técnica sem cálculo"
+            : `Resume Match: cobertura técnica ${formatScore(data.score)}/100`,
         ""
     ];
     for (const group of GROUPS) {
@@ -580,6 +631,9 @@ function report(data) {
         lines.push(`Não avaliado pelo programa (${data.unevaluated.length})`);
         for (const item of data.unevaluated) {
             lines.push(`- ${item.text} [${REASON_LABELS[item.reason] || ""}]`);
+            if (item.resumeEvidence) {
+                lines.push(`    No currículo: "${item.resumeEvidence}"`);
+            }
         }
         lines.push("");
     }

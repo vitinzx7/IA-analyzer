@@ -53,7 +53,7 @@ class AnalysisServiceTest {
         assertThat(result.requirements()).extracting(r -> r.status())
                 .containsExactly(MatchStatus.MATCH, MatchStatus.PARTIAL, MatchStatus.MISSING);
         assertThat(result.score()).isEqualTo(50.0);
-        assertThat(result.summary()).contains("Score 50/100");
+        assertThat(result.summary()).contains("Cobertura tecnica 50/100");
     }
 
     @Test

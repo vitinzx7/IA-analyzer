@@ -36,7 +36,7 @@ public final class LocalSummaryGenerator implements SummaryGenerator {
                 .filter(r -> r.status() == MatchStatus.MISSING).toList();
 
         StringBuilder summary = new StringBuilder();
-        summary.append("Score ").append(formatScore(score)).append("/100: ")
+        summary.append("Cobertura tecnica ").append(formatScore(score)).append("/100: ")
                 .append(matches.size()).append(" de ").append(requirements.size())
                 .append(" requisitos reconhecidos com evidencia completa (")
                 .append(matches.size()).append(" MATCH, ")
@@ -66,7 +66,7 @@ public final class LocalSummaryGenerator implements SummaryGenerator {
 
         summary.append(' ').append(unevaluated)
                 .append("Requisitos fora do dicionario nao entram no calculo. ")
-                .append("O score nao e uma probabilidade de contratacao.");
+                .append("A cobertura tecnica nao e nota do candidato nem probabilidade de contratacao.");
         return summary.toString();
     }
 

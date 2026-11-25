@@ -36,7 +36,7 @@ class LocalSummaryGeneratorTest {
 
         assertThat(generator.generate(List.of(match("Java", MatchStatus.MATCH)), 100.0, job))
                 .contains("2 trecho(s) de requisito da vaga nao foram avaliados")
-                .endsWith("O score nao e uma probabilidade de contratacao.");
+                .endsWith("nao e nota do candidato nem probabilidade de contratacao.");
         assertThat(generator.generate(List.of(), 0.0, job))
                 .contains("Nenhum requisito reconhecido")
                 .contains("2 trecho(s)");
@@ -50,7 +50,7 @@ class LocalSummaryGeneratorTest {
                 match("AWS", MatchStatus.MISSING)), 50.0);
 
         assertThat(summary)
-                .contains("Score 50/100")
+                .contains("Cobertura tecnica 50/100")
                 .contains("1 MATCH")
                 .contains("1 PARTIAL")
                 .contains("1 MISSING");
@@ -71,7 +71,7 @@ class LocalSummaryGeneratorTest {
                 match("Java", MatchStatus.MATCH)), 100.0);
 
         assertThat(summary).contains("fora do dicionario nao entram no calculo");
-        assertThat(summary).contains("nao e uma probabilidade de contratacao");
+        assertThat(summary).contains("nao e nota do candidato nem probabilidade de contratacao");
     }
 
     @Test
