@@ -602,6 +602,56 @@ texto colado manda `null`.
 
 ---
 
+## D21 — Simulação de melhora fora da cobertura
+
+Implementado em `ImprovementSimulator`, `ImprovementHints`, `AnalysisService`
+e `app.js`.
+
+A tela ganhou um segundo painel que mostra quais mudanças no currículo
+aumentariam a cobertura e quantos pontos cada uma daria. Ele não altera a
+cobertura real e não escreve o currículo.
+
+A conta usa o mesmo `ScoreCalculator` da cobertura real, sobre uma cópia da
+lista de requisitos com a mudança aplicada. Não existe segunda fórmula.
+
+```
+A  PARTIAL                          -> MATCH  "Se você usou X em algum projeto..."
+B  MISSING com indício no currículo -> MATCH  "Seu currículo tem X. Se você trabalha com Y..."
+C  MISSING sem indício              -> fora da conta, "Lacuna real"
+```
+
+Pontos de cada sugestão = cobertura com só aquela mudança menos a cobertura
+real, arredondada em uma casa. "Fazendo todas" aplica todas juntas na mesma
+cópia. As sugestões aparecem da que dá mais pontos para a que dá menos.
+
+Indícios são de mão única e ficam numa tabela à parte (`ImprovementHints`),
+consultada pelo requisito que falta:
+
+```
+Git        <- GitHub
+Back-end   <- Java, Spring Boot, API REST
+Front-end  <- React, HTML, CSS, JavaScript
+```
+
+Java indica Back-end, mas Back-end não indica Java: saber que a pessoa faz
+back-end não diz a linguagem. O indício é procurado com o mesmo
+`RequirementMatcher` da análise, então termo negado ("Nunca utilizei Java") ou
+dentro de e-mail não vale como indício.
+
+Um conjunto PARTIAL com alguma parte ausente ("TCP/IP + DNS + DHCP" sem DHCP)
+vai para C, e não para A: descrever melhor as partes que existem não o faz
+virar MATCH, porque a parte que falta continua faltando.
+
+Back-end e Front-end entraram no dicionário (com `backend`, `back end`,
+`frontend`, `front end`), porque a tabela precisa deles. Com isso, uma vaga
+que cita esses termos passa a ter esses requisitos, e a cobertura dessa vaga
+muda (ver L23).
+
+A tela continua chamando o número de cobertura (D19): o total aparece como
+"Fazendo todas: a cobertura iria de X para Y/100".
+
+---
+
 ## Observações do texto real (Bloco 1)
 
 Extraídas de um único currículo real, 3050 caracteres, coluna única. Sustentam

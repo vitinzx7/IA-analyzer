@@ -90,6 +90,7 @@ Resposta:
   a seção e o motivo (`EDUCATION`, `LANGUAGE` ou `NO_KNOWN_TERM`).
 - `unknownTerms`: nomes da vaga que parecem tecnologia mas o dicionário não
   conhece.
+- `improvement`: simulação de melhora (ver abaixo). Não muda o `score`.
 
 Erros seguem o formato `ProblemDetail` (RFC 9457), com `title` e `detail`.
 
@@ -182,6 +183,39 @@ perde nada. A API manda o resultado em `pdfCheck`:
 }
 ```
 
+## Simulação de melhora
+
+Um segundo painel mostra quais mudanças no currículo aumentariam a cobertura
+e quantos pontos cada uma daria (D21). A cobertura real não muda e o programa
+não escreve o currículo: como ele não sabe se a pessoa usou o termo, o texto é
+sempre condicional.
+
+- **A, só em lista:** o requisito aparece sem frase de ação. "Se você usou
+  React em algum projeto, descreva isso numa frase de ação."
+- **B, indício:** o requisito falta, mas outro termo do currículo o sugere.
+  "Seu currículo tem Java. Se você trabalha com Back-end, cite Back-end numa
+  frase de ação." Os indícios são de mão única: Java indica Back-end, mas
+  Back-end não indica Java.
+- **Lacuna real:** falta, e nada no currículo sugere. Não dá pontos.
+
+Os pontos saem da mesma conta da cobertura, aplicada numa cópia dos
+requisitos com a mudança. Na API:
+
+```json
+"improvement": {
+  "suggestions": [
+    { "requirement": "Back-end", "type": "INDICATED", "indicator": "Java",
+      "evidence": "Desenvolvi uma API em Java.", "priority": "REQUIRED",
+      "scoreWithChange": 62.5, "points": 25.0 },
+    { "requirement": "Docker", "type": "LIST_ONLY", "indicator": null,
+      "evidence": "Tecnologias: Docker.", "priority": "REQUIRED",
+      "scoreWithChange": 50.0, "points": 12.5 }
+  ],
+  "scoreWithAll": 75.0,
+  "gaps": [ { "requirement": "AWS", "priority": "REQUIRED", "missingParts": [] } ]
+}
+```
+
 ## Medir o acerto
 
 Cada requisito do resultado tem os botões "Certo" e "Devia ser …". Cada
@@ -254,7 +288,8 @@ resumematch.feedback.path=/caminho/feedback.csv
 ```
 
 A suíte cobre extração de PDF, normalização e dicionário, divisão em frases,
-extração de requisitos, classificação, score, resumo, CSV, API e a página web.
+extração de requisitos, classificação, score, simulação de melhora, resumo, CSV,
+API e a página web.
 
 ## Estrutura
 
@@ -264,7 +299,7 @@ src/main/java/com/resumematch/
 ├── api/        controller, configuração e tratamento de erros
 ├── dictionary/ dicionário de tecnologias e normalização
 ├── log/        registro CSV
-├── matcher/    frases, requisitos, classificação, score e resumo
+├── matcher/    frases, requisitos, classificação, score, simulação e resumo
 └── pdf/        extração de texto do PDF
 ```
 

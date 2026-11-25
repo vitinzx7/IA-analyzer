@@ -350,6 +350,21 @@ camada de OCR mais um rodapé digital) tem a camada de OCR tirada da análise.
 
 ---
 
+## L23 — Back-end e Front-end viram requisito, inclusive no título da vaga · ABERTA
+
+Com Back-end e Front-end no dicionário (D21), a vaga sintética
+`vaga2_dev_java_junior.txt` passou a ter dois requisitos novos: Back-end,
+obrigatório, que vem do título "Desenvolvedor Backend Java Júnior", e
+Front-end, diferencial, que vem de "Noções de front-end com JS ou React". A
+cobertura dessa vaga muda para o mesmo currículo. O título já gerava Java do
+mesmo jeito antes deste bloco.
+
+A tabela de indícios também é pequena: só cobre Git, Back-end e Front-end. Um
+requisito ausente fora dela sempre cai em "Lacuna real", mesmo quando o
+currículo tem algo próximo.
+
+---
+
 ## L16 — Tempo quadrático em texto com muitas repetições · RESOLVIDA
 
 O matcher avaliava o verbo da frase inteira uma vez para cada ocorrência do
