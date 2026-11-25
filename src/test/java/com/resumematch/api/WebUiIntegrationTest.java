@@ -53,6 +53,17 @@ class WebUiIntegrationTest {
     }
 
     @Test
+    void paginaMostraASimulacaoDeMelhora() throws Exception {
+        assertThat(get("/").body())
+                .contains("id=\"simulation\"")
+                .contains("Simulação de melhora");
+        assertThat(get("/app.js").body())
+                .contains("data.improvement")
+                .contains("scoreWithAll")
+                .contains("Lacuna real: precisa ter, não só escrever");
+    }
+
+    @Test
     void scriptEnviaMarcacaoDeCertoOuErrado() throws Exception {
         assertThat(get("/").body()).contains("id=\"feedback-summary\"");
         assertThat(get("/app.js").body())

@@ -571,6 +571,58 @@ mark {
     font-weight: 650;
 }
 
+.simulation {
+    display: grid;
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.simulation h2 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.simulation .requirement-list {
+    margin: 0;
+}
+
+.suggestion-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.suggestion-head h3 {
+    margin: 0;
+}
+
+.points {
+    color: var(--match);
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.advice {
+    margin: 0 0 8px;
+}
+
+.simulation-total {
+    margin: 0;
+    font-weight: 700;
+}
+
+.gaps h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.gaps .parts {
+    margin: 10px 0 0;
+}
+
 .empty {
     margin: 16px 0 0;
     color: var(--muted);

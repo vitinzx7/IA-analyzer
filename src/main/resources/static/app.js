@@ -2,6 +2,7 @@ const MAX_PDF_BYTES = 10 * 1024 * 1024;
 const MAX_RESUME_CHARS = 200000;
 const MAX_JOB_CHARS = 50000;
 const ALTERNATIVE_SEPARATOR = " / ";
+const COMPONENT_SEPARATOR = " + ";
 
 const form = document.querySelector("#analysis-form");
 const tabs = [...document.querySelectorAll(".tab")];
@@ -33,6 +34,10 @@ const again = document.querySelector("#again");
 const feedbackSummary = document.querySelector("#feedback-summary");
 const requiredGap = document.querySelector("#required-gap");
 const pdfWarning = document.querySelector("#pdf-warning");
+const simulation = document.querySelector("#simulation");
+const suggestionsList = document.querySelector("#suggestions");
+const simulationTotal = document.querySelector("#simulation-total");
+const gapsBox = document.querySelector("#gaps");
 
 /** Mesmo limite do servidor: abaixo disso é ruído do PDF. */
 const MIN_HIDDEN_CHARS = 10;
@@ -86,6 +91,19 @@ const EVIDENCE_SECTIONS = {
     LANGUAGES: "Idiomas",
     SUMMARY: "Resumo",
     HEADER: "Cabeçalho"
+};
+
+const SUGGESTION_TYPES = {
+    LIST_ONLY: {
+        letter: "A",
+        label: "só em lista",
+        title: "O termo aparece no currículo, mas sem frase de ação."
+    },
+    INDICATED: {
+        letter: "B",
+        label: "indício",
+        title: "O termo falta, mas outro termo do currículo sugere que você pode ter."
+    }
 };
 
 const STATUS_MARKS = { MATCH: "✓", PARTIAL: "~", MISSING: "✗" };
@@ -259,6 +277,7 @@ function render(data) {
         requirements,
         unevaluated,
         unknownTerms,
+        improvement: data.improvement || null,
         summary: data.summary || ""
     };
 
@@ -288,6 +307,7 @@ function render(data) {
         : `${requirements.length} requisito(s) reconhecido(s) pelo dicionário.`;
     summary.textContent = data.summary || "";
     copyStatus.textContent = "";
+    renderSimulation(data.improvement, hasScore ? score : null);
 
     const sections = requirements.length === 0
         ? []
@@ -540,6 +560,123 @@ function tag(text, title) {
 }
 
 /**
+ * Mostra quanto a cobertura subiria com cada mudança no currículo. Os pontos
+ * vêm prontos do servidor, calculados com a mesma conta da cobertura real.
+ */
+function renderSimulation(improvement, score) {
+    simulation.hidden = score === null || !improvement;
+    if (simulation.hidden) {
+        return;
+    }
+    const suggestions = Array.isArray(improvement.suggestions) ? improvement.suggestions : [];
+    const gaps = Array.isArray(improvement.gaps) ? improvement.gaps : [];
+
+    suggestionsList.replaceChildren(...suggestions.map(renderSuggestion));
+    suggestionsList.hidden = suggestions.length === 0;
+    if (typeof improvement.scoreWithAll === "number") {
+        simulationTotal.textContent = `Fazendo todas: a cobertura iria de ${formatScore(score)} `
+            + `para ${formatScore(improvement.scoreWithAll)}/100.`;
+    } else if (gaps.length === 0) {
+        simulationTotal.textContent = "Todos os requisitos reconhecidos já aparecem numa frase de ação. "
+            + "Não há o que simular.";
+    } else {
+        simulationTotal.textContent = "Nenhuma mudança de escrita aumenta a cobertura: "
+            + "o que falta não aparece no currículo.";
+    }
+    gapsBox.replaceChildren(...(gaps.length > 0 ? [renderGaps(gaps)] : []));
+}
+
+function renderSuggestion(item) {
+    const type = SUGGESTION_TYPES[item.type] || { letter: "?", label: "", title: "" };
+    const spoken = spokenName(item.requirement);
+    const entry = document.createElement("li");
+    entry.className = "requirement";
+
+    const head = document.createElement("div");
+    head.className = "suggestion-head";
+    const name = document.createElement("h3");
+    name.textContent = requirementNames(item.requirement).join(" · ");
+    name.append(" ", tag(`${type.letter} · ${type.label}`, type.title));
+    if (item.priority === "PREFERRED") {
+        name.append(" ", tag("diferencial", "Diferencial: vale metade no score."));
+    }
+    const points = document.createElement("span");
+    points.className = "points";
+    points.textContent = `+${formatScore(item.points)} pontos`;
+    points.title = `Só com esta mudança: ${formatScore(item.scoreWithChange)}/100`;
+    head.append(name, points);
+
+    const advice = document.createElement("p");
+    advice.className = "advice";
+    advice.textContent = item.type === "INDICATED"
+        ? `Seu currículo tem ${item.indicator}. Se você trabalha com ${spoken}, `
+            + `cite ${spoken} numa frase de ação.`
+        : `Se você usou ${spoken} em algum projeto, descreva isso numa frase de ação.`;
+    entry.append(head, advice);
+
+    if (item.evidence) {
+        const evidence = document.createElement("blockquote");
+        const names = item.type === "INDICATED" ? [item.indicator] : requirementNames(item.requirement);
+        evidence.append("No currículo: ", highlight(item.evidence, names));
+        entry.append(evidence);
+    }
+    return entry;
+}
+
+function renderGaps(gaps) {
+    const box = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = `Lacuna real: precisa ter, não só escrever (${gaps.length})`;
+    const note = document.createElement("p");
+    note.className = "hint";
+    note.textContent = "Nenhum termo do currículo indica estes requisitos. "
+        + "Ficam fora da simulação e não dão pontos.";
+    const list = document.createElement("ul");
+    list.className = "parts";
+    for (const gap of gaps) {
+        const chip = document.createElement("li");
+        chip.className = "chip missing";
+        chip.textContent = gapText(gap);
+        list.append(chip);
+    }
+    box.append(title, note, list);
+    return box;
+}
+
+function gapText(gap) {
+    const names = requirementNames(gap.requirement);
+    const missing = Array.isArray(gap.missingParts) ? gap.missingParts : [];
+    let text = names.join(" · ");
+    if (missing.length > 0 && missing.length < names.length) {
+        text += ` (falta ${spokenList(missing, "e")})`;
+    }
+    return gap.priority === "PREFERRED" ? `${text} · diferencial` : text;
+}
+
+/** Partes de um conjunto ou opções de alternativas, a partir do nome. */
+function requirementNames(name) {
+    const text = String(name);
+    return text.includes(COMPONENT_SEPARATOR)
+        ? text.split(COMPONENT_SEPARATOR)
+        : text.split(ALTERNATIVE_SEPARATOR);
+}
+
+/** "TCP/IP + DNS" vira "TCP/IP e DNS"; "Azure / AWS" vira "Azure ou AWS". */
+function spokenName(name) {
+    const text = String(name);
+    return text.includes(COMPONENT_SEPARATOR)
+        ? spokenList(text.split(COMPONENT_SEPARATOR), "e")
+        : spokenList(text.split(ALTERNATIVE_SEPARATOR), "ou");
+}
+
+function spokenList(names, conjunction) {
+    if (names.length < 2) {
+        return names.join("");
+    }
+    return `${names.slice(0, -1).join(", ")} ${conjunction} ${names.at(-1)}`;
+}
+
+/**
  * Mostra o que a vaga pede e o programa não avaliou: trechos sem termo do
  * dicionário, formação, idioma e nomes que o dicionário não conhece.
  */
@@ -681,8 +818,34 @@ function report(data) {
     if (data.unknownTerms.length > 0) {
         lines.push(`Nomes que o dicionário não conhece: ${data.unknownTerms.join(", ")}`, "");
     }
+    lines.push(...simulationLines(data.improvement, data.score));
     lines.push(data.summary);
     return lines.join("\n");
+}
+
+function simulationLines(improvement, score) {
+    if (score === null || !improvement) {
+        return [];
+    }
+    const suggestions = improvement.suggestions || [];
+    const gaps = improvement.gaps || [];
+    if (suggestions.length === 0 && gaps.length === 0) {
+        return [];
+    }
+    const lines = ["Simulação de melhora (não muda a cobertura; só vale se for verdade)"];
+    for (const item of suggestions) {
+        const type = SUGGESTION_TYPES[item.type] || { letter: "?" };
+        const why = item.type === "INDICATED" ? `indício: ${item.indicator}` : "só em lista";
+        lines.push(`- +${formatScore(item.points)} ${spokenName(item.requirement)} [${type.letter}, ${why}]`);
+    }
+    if (typeof improvement.scoreWithAll === "number") {
+        lines.push(`Fazendo todas: cobertura ${formatScore(improvement.scoreWithAll)}/100`);
+    }
+    if (gaps.length > 0) {
+        lines.push(`Lacuna real: ${gaps.map(gapText).join("; ")}`);
+    }
+    lines.push("");
+    return lines;
 }
 
 again.addEventListener("click", () => {
