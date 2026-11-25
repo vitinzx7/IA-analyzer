@@ -92,6 +92,19 @@ class AnalysisControllerTest {
     }
 
     @Test
+    void mandaASecaoDaEvidencia() throws Exception {
+        mockMvc.perform(post("/api/analyze/text")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"resume":"RESUMO\\nTecnologias: Java.\\nPROJETOS\\nDesenvolvi uma API em Java.",
+                         "job":"Java e AWS"}
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requirements[0].evidenceSection").value("PROJECTS"))
+                .andExpect(jsonPath("$.requirements[1].evidenceSection").value(nullValue()));
+    }
+
+    @Test
     void mandaOQueNaoFoiAvaliado() throws Exception {
         mockMvc.perform(post("/api/analyze/text")
                 .contentType(MediaType.APPLICATION_JSON)

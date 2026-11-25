@@ -9,9 +9,12 @@ import java.util.List;
  *        REQUIRED, que vale 1
  * @param components decisao de cada parte, quando o requisito e um conjunto;
  *        vazia nos demais
+ * @param evidenceSection secao do curriculo de onde a evidencia veio; null
+ *        quando nao ha evidencia
  */
 public record RequirementMatch(String name, MatchStatus status, String evidence,
-        RequirementPriority priority, List<ComponentMatch> components) {
+        RequirementPriority priority, List<ComponentMatch> components,
+        ResumeSection evidenceSection) {
 
     public RequirementMatch {
         if (status == null) {
@@ -28,6 +31,12 @@ public record RequirementMatch(String name, MatchStatus status, String evidence,
 
         priority = priority == null ? RequirementPriority.REQUIRED : priority;
         components = components == null ? List.of() : List.copyOf(components);
+        evidenceSection = status == MatchStatus.MISSING ? null : evidenceSection;
+    }
+
+    public RequirementMatch(String name, MatchStatus status, String evidence,
+            RequirementPriority priority, List<ComponentMatch> components) {
+        this(name, status, evidence, priority, components, null);
     }
 
     public RequirementMatch(String name, MatchStatus status, String evidence,

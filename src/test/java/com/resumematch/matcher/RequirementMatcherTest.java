@@ -62,6 +62,61 @@ class RequirementMatcherTest {
     }
 
     @Test
+    void evidenciaParcialVemDaSecaoMaisForte() {
+        String resume = """
+                Fulano de Tal
+                Estudante de TI | Redes
+                RESUMO
+                Tenho conhecimento em redes de computadores.
+                CURSOS
+                Redes de Computadores (40h)
+                """;
+
+        RequirementMatch result = match(resume, "Redes de Computadores").getFirst();
+
+        assertThat(result.status()).isEqualTo(MatchStatus.PARTIAL);
+        assertThat(result.evidence()).isEqualTo("Redes de Computadores (40h)");
+        assertThat(result.evidenceSection()).isEqualTo(ResumeSection.COURSES);
+    }
+
+    @Test
+    void frasesComAcaoPreferemProjetoAoResumo() {
+        String resume = """
+                RESUMO
+                Desenvolvi sistemas em Java durante o curso.
+                PROJETOS
+                Desenvolvi uma API em Java com Spring Boot.
+                """;
+
+        RequirementMatch result = match(resume, "Java").getFirst();
+
+        assertThat(result.status()).isEqualTo(MatchStatus.MATCH);
+        assertThat(result.evidence()).isEqualTo("Desenvolvi uma API em Java com Spring Boot.");
+        assertThat(result.evidenceSection()).isEqualTo(ResumeSection.PROJECTS);
+    }
+
+    @Test
+    void fraseComAcaoVenceSecaoMelhorSemAcao() {
+        String resume = """
+                RESUMO
+                Desenvolvi uma API em Java.
+                PROJETOS
+                Stack: Java e Docker.
+                """;
+
+        RequirementMatch result = match(resume, "Java").getFirst();
+
+        assertThat(result.status()).isEqualTo(MatchStatus.MATCH);
+        assertThat(result.evidenceSection()).isEqualTo(ResumeSection.SUMMARY);
+    }
+
+    @Test
+    void requisitoAusenteNaoTemSecao() {
+        assertThat(match("PROJETOS\nDesenvolvi uma API em Java.", "AWS").getFirst().evidenceSection())
+                .isNull();
+    }
+
+    @Test
     void distribuicaoLinuxEWindowsServerSatisfazemOGenerico() {
         assertThat(match("Configurei o Kali Linux no laboratorio.", "Linux").getFirst().status())
                 .isEqualTo(MatchStatus.MATCH);

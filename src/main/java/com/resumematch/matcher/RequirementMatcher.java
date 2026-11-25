@@ -25,10 +25,10 @@ public final class RequirementMatcher {
 
     private final TechnologyDictionary dictionary;
 
-    private record Mention(TermOccurrence occurrence, Sentence sentence) {
+    private record Mention(TermOccurrence occurrence, Sentence sentence, ResumeSection section) {
     }
 
-    private record Found(MatchStatus status, String evidence) {
+    private record Found(MatchStatus status, String evidence, ResumeSection section) {
     }
 
     public RequirementMatcher(TechnologyDictionary dictionary) {
@@ -62,7 +62,7 @@ public final class RequirementMatcher {
             }
             Found found = find(RequirementAlternatives.options(requirement.name()), mentions, hasAction);
             result.add(new RequirementMatch(requirement.name(), found.status(), found.evidence(),
-                    requirement.priority()));
+                    requirement.priority(), List.of(), found.section()));
         }
         return List.copyOf(result);
     }
@@ -75,21 +75,24 @@ public final class RequirementMatcher {
     private RequirementMatch matchComposite(JobRequirement requirement, List<Mention> mentions,
             Map<Sentence, Boolean> hasAction) {
         List<ComponentMatch> parts = new ArrayList<>();
+        List<Found> founds = new ArrayList<>();
         for (String component : requirement.components()) {
             Found found = find(List.of(component), mentions, hasAction);
+            founds.add(found);
             parts.add(new ComponentMatch(component, found.status(), found.evidence()));
         }
-        boolean allMatch = parts.stream().allMatch(part -> part.status() == MatchStatus.MATCH);
-        boolean noneFound = parts.stream().allMatch(part -> part.status() == MatchStatus.MISSING);
+        boolean allMatch = founds.stream().allMatch(found -> found.status() == MatchStatus.MATCH);
+        boolean noneFound = founds.stream().allMatch(found -> found.status() == MatchStatus.MISSING);
         MatchStatus status = allMatch ? MatchStatus.MATCH
                 : noneFound ? MatchStatus.MISSING
                 : MatchStatus.PARTIAL;
-        String evidence = status == MatchStatus.MISSING ? null : parts.stream()
-                .filter(part -> part.status() != MatchStatus.MISSING)
-                .min(Comparator.comparing(ComponentMatch::status))
-                .map(ComponentMatch::evidence)
+        Found shown = status == MatchStatus.MISSING ? null : founds.stream()
+                .filter(found -> found.status() != MatchStatus.MISSING)
+                .min(Comparator.comparing(Found::status))
                 .orElseThrow();
-        return new RequirementMatch(requirement.name(), status, evidence, requirement.priority(), parts);
+        return new RequirementMatch(requirement.name(), status,
+                shown == null ? null : shown.evidence(), requirement.priority(), parts,
+                shown == null ? null : shown.section());
     }
 
     /**
@@ -99,6 +102,7 @@ public final class RequirementMatcher {
     private List<Mention> mentions(String text, List<Sentence> sentences) {
         boolean[] inEmail = PersonalData.emailPositions(text);
         TermNegation negation = new TermNegation(text);
+        ResumeSections sections = ResumeSections.read(text);
         List<Mention> mentions = new ArrayList<>();
         for (TermOccurrence occurrence : dictionary.findIn(text)) {
             if (inEmail[occurrence.start()]) {
@@ -106,7 +110,7 @@ public final class RequirementMatcher {
             }
             Sentence sentence = sentenceFor(occurrence, sentences);
             if (!negation.negates(occurrence, sentence)) {
-                mentions.add(new Mention(occurrence, sentence));
+                mentions.add(new Mention(occurrence, sentence, sections.sectionAt(occurrence.start())));
             }
         }
         return mentions;
@@ -120,22 +124,41 @@ public final class RequirementMatcher {
                 .toList();
 
         if (found.isEmpty()) {
-            return new Found(MatchStatus.MISSING, null);
+            return new Found(MatchStatus.MISSING, null, null);
         }
 
+        Mention best = null;
+        boolean bestHasAction = false;
         for (Mention mention : found) {
             Sentence sentence = mention.sentence();
-            if (sentence != null
-                    && hasAction.computeIfAbsent(sentence, s -> ActionVerbs.contains(s.text()))) {
-                return new Found(MatchStatus.MATCH, evidence(sentence.text()));
+            boolean action = sentence != null
+                    && hasAction.computeIfAbsent(sentence, s -> ActionVerbs.contains(s.text()));
+            if (best == null || better(action, mention.section(), bestHasAction, best.section())) {
+                best = mention;
+                bestHasAction = action;
+            }
+            if (bestHasAction && best.section().rank() == 0) {
+                break;
             }
         }
 
-        Mention first = found.getFirst();
-        String evidence = first.sentence() != null
-                ? first.sentence().text()
-                : first.occurrence().matchedText();
-        return new Found(MatchStatus.PARTIAL, evidence(evidence));
+        String evidence = best.sentence() != null
+                ? best.sentence().text()
+                : best.occurrence().matchedText();
+        return new Found(bestHasAction ? MatchStatus.MATCH : MatchStatus.PARTIAL,
+                evidence(evidence), best.section());
+    }
+
+    /**
+     * Frase com acao vence frase sem acao; entre duas iguais, vence a secao
+     * mais forte (ver {@link ResumeSection}); no empate, fica a primeira.
+     */
+    private static boolean better(boolean action, ResumeSection section,
+            boolean bestAction, ResumeSection bestSection) {
+        if (action != bestAction) {
+            return action;
+        }
+        return section.rank() < bestSection.rank();
     }
 
     /**
