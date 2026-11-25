@@ -60,7 +60,10 @@ class WebUiIntegrationTest {
         assertThat(get("/app.js").body())
                 .contains("data.improvement")
                 .contains("scoreWithAll")
-                .contains("Lacuna real: precisa ter, não só escrever");
+                .contains("Sem indício no currículo")
+                .contains("Valores arredondados")
+                .doesNotContain("Lacuna real");
+        assertThat(get("/").body()).contains("id=\"simulation-rounding\"");
     }
 
     @Test

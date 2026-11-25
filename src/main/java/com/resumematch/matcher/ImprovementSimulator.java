@@ -20,8 +20,9 @@ import java.util.Set;
  * INDICATED  requisito MISSING indicado por outro termo     -> MATCH
  * </pre>
  *
- * Requisito MISSING sem indicio vira lacuna real e nao da pontos: o curriculo
- * nao tem nada que sugira que a pessoa tenha aquilo.
+ * Requisito MISSING sem indicio fica fora da simulacao e nao da pontos: nenhum
+ * termo do curriculo o indica. Nao e certeza de lacuna, porque a extracao da
+ * vaga ainda separa alternativas que deviam ser um requisito so.
  */
 public final class ImprovementSimulator {
 

@@ -37,6 +37,7 @@ const pdfWarning = document.querySelector("#pdf-warning");
 const simulation = document.querySelector("#simulation");
 const suggestionsList = document.querySelector("#suggestions");
 const simulationTotal = document.querySelector("#simulation-total");
+const simulationRounding = document.querySelector("#simulation-rounding");
 const gapsBox = document.querySelector("#gaps");
 
 /** Mesmo limite do servidor: abaixo disso é ruído do PDF. */
@@ -105,6 +106,12 @@ const SUGGESTION_TYPES = {
         title: "O termo falta, mas outro termo do currículo sugere que você pode ter."
     }
 };
+
+/**
+ * Cada ponto e o total saem da cobertura arredondada em uma casa, então somar
+ * as sugestões pode dar alguns décimos a mais ou a menos que o total.
+ */
+const ROUNDING_NOTE = "Valores arredondados: a soma das sugestões pode diferir do total em alguns décimos.";
 
 const STATUS_MARKS = { MATCH: "✓", PARTIAL: "~", MISSING: "✗" };
 const VERDICT_LABELS = { MATCH: "encontrado", PARTIAL: "parcial", MISSING: "ausente" };
@@ -573,7 +580,10 @@ function renderSimulation(improvement, score) {
 
     suggestionsList.replaceChildren(...suggestions.map(renderSuggestion));
     suggestionsList.hidden = suggestions.length === 0;
-    if (typeof improvement.scoreWithAll === "number") {
+    const hasTotal = typeof improvement.scoreWithAll === "number";
+    simulationRounding.textContent = ROUNDING_NOTE;
+    simulationRounding.hidden = !hasTotal;
+    if (hasTotal) {
         simulationTotal.textContent = `Fazendo todas: a cobertura iria de ${formatScore(score)} `
             + `para ${formatScore(improvement.scoreWithAll)}/100.`;
     } else if (gaps.length === 0) {
@@ -626,11 +636,12 @@ function renderSuggestion(item) {
 function renderGaps(gaps) {
     const box = document.createElement("div");
     const title = document.createElement("h3");
-    title.textContent = `Lacuna real: precisa ter, não só escrever (${gaps.length})`;
+    title.textContent = `Sem indício no currículo (${gaps.length})`;
     const note = document.createElement("p");
     note.className = "hint";
     note.textContent = "Nenhum termo do currículo indica estes requisitos. "
-        + "Ficam fora da simulação e não dão pontos.";
+        + "Ficam fora da simulação e não dão pontos. Se a vaga aceita uma alternativa "
+        + "que você já tem, confira na lista de requisitos.";
     const list = document.createElement("ul");
     list.className = "parts";
     for (const gap of gaps) {
@@ -840,9 +851,10 @@ function simulationLines(improvement, score) {
     }
     if (typeof improvement.scoreWithAll === "number") {
         lines.push(`Fazendo todas: cobertura ${formatScore(improvement.scoreWithAll)}/100`);
+        lines.push(ROUNDING_NOTE);
     }
     if (gaps.length > 0) {
-        lines.push(`Lacuna real: ${gaps.map(gapText).join("; ")}`);
+        lines.push(`Sem indício no currículo: ${gaps.map(gapText).join("; ")}`);
     }
     lines.push("");
     return lines;
