@@ -142,6 +142,27 @@ morrem se a normalização remover pontuação.
 Precisa cobrir termos de suporte, infraestrutura, office e RPA, e não apenas
 stack de desenvolvimento — as duas vagas reais são de suporte.
 
+Ampliação para vagas de suporte, infraestrutura e segurança, a partir dos
+nomes que a lista "não avaliado" (D15) mostrou numa vaga real de estágio em
+infraestrutura e de termos comuns nesse tipo de vaga:
+
+```
+chamados      Jira, Confluence, Zendesk, GLPI, ServiceNow, Suporte Técnico
+scripts       PowerShell, Bash, Shell Script
+contas        Google Workspace (G Suite), Microsoft Teams, Intune, Exchange, LDAP
+redes         VPN, VLAN, Firewall, SSH, Cabeamento Estruturado, CCNA
+sistemas      Ubuntu, Debian, Red Hat, Kali Linux
+virtualização VMware, Hyper-V, VirtualBox, Proxmox
+monitoramento Zabbix, Nagios, Grafana, Prometheus
+segurança     Wireshark, Nmap, SIEM, Splunk, Wazuh, Sysmon, Event Viewer,
+              MITRE ATT&CK, OWASP, ISO 27001, LGPD
+```
+
+A lista foi escrita à mão, não importada. A consulta à API do ESCO em
+português não trouxe conceito para Jira, DHCP, Active Directory nem
+PowerShell, e os rótulos estavam em português de Portugal; importar uma
+taxonomia geral traria termos comuns que viram falso positivo.
+
 ---
 
 ## D4 — Commits
@@ -176,7 +197,14 @@ Oracle                  satisfaz  SQL
 H2                      satisfaz  SQL
 Azure Container Apps    satisfaz  Azure
 Docker Compose          satisfaz  Docker
+Kali Linux, Ubuntu,
+Debian, Red Hat         satisfazem Linux
+Windows Server          satisfaz  Windows
+Bash                    satisfaz  Shell Script
 ```
+
+As distribuições precisam da regra porque o casamento mais longo consome
+"Kali Linux" inteiro, e o "Linux" de dentro deixaria de contar.
 
 As duas ultimas linhas cobrem termos especificos que, sem a equivalencia, eram
 consumidos pelo casamento mais longo e deixavam de satisfazer o termo generico
@@ -287,6 +315,12 @@ Famílias iniciais, pequenas de propósito:
 nuvem             Azure, AWS, GCP
 banco relacional  PostgreSQL, MySQL, SQL Server, Oracle
 hospedagem de Git GitHub, GitLab
+chamados          Jira, Zendesk, GLPI, ServiceNow
+shell             PowerShell, Bash, Shell Script
+suíte de escritório Google Workspace, Office 365
+virtualização     VMware, Hyper-V, VirtualBox, Proxmox
+monitoramento     Zabbix, Nagios, Prometheus, Grafana
+SIEM              Splunk, Wazuh
 ```
 
 `Windows/Linux` não agrupa: em vaga de suporte a barra costuma pedir os dois.
@@ -385,8 +419,10 @@ requisito só.
 ```
 
 "ex.", "como", "etc.", "similares", "outros" ou "afins" no parêntese indicam
-lista de exemplos: qualquer um basta. Sem essas palavras, a lista é um
-conjunto, avaliado parte por parte:
+lista de exemplos: qualquer um basta. Termos todos da mesma família (D11)
+também viram alternativas, mesmo sem "ou": "ferramentas de chamados (Jira,
+Zendesk, GLPI)" pede uma ferramenta de chamado, não as três. Fora desses
+casos, a lista é um conjunto, avaliado parte por parte:
 
 ```
 todas as partes MATCH       -> MATCH
