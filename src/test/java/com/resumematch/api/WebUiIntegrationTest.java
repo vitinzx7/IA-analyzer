@@ -52,6 +52,15 @@ class WebUiIntegrationTest {
                 .contains("\"PREFERRED\"");
     }
 
+    @Test
+    void scriptEnviaMarcacaoDeCertoOuErrado() throws Exception {
+        assertThat(get("/").body()).contains("id=\"feedback-summary\"");
+        assertThat(get("/app.js").body())
+                .contains("/api/feedback")
+                .contains("/api/feedback/summary")
+                .contains("analysisId");
+    }
+
     private HttpResponse<String> get(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + path))

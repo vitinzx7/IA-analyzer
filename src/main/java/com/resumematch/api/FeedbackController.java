@@ -30,6 +30,10 @@ public class FeedbackController {
         if (feedback == null) {
             throw new AnalysisException("O corpo da requisicao esta vazio.");
         }
+        if (!store.enabled()) {
+            throw new AnalysisException(
+                    "O registro de marcacoes esta desligado (resumematch.feedback.enabled=false).");
+        }
         store.record(feedback);
         return summary();
     }

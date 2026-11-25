@@ -488,6 +488,29 @@ button.loading .spinner {
     vertical-align: middle;
 }
 
+.verdict {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.verdict .hint {
+    margin: 0;
+}
+
+button.small {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+}
+
+button.small[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 .parts {
     display: flex;
     flex-wrap: wrap;

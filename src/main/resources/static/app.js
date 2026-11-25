@@ -30,6 +30,7 @@ const groups = document.querySelector("#groups");
 const copyButton = document.querySelector("#copy");
 const copyStatus = document.querySelector("#copy-status");
 const again = document.querySelector("#again");
+const feedbackSummary = document.querySelector("#feedback-summary");
 
 const DEFAULT_FILE_LABEL = fileLabel.textContent;
 const DEFAULT_FILE_DETAIL = fileDetail.textContent;
@@ -72,9 +73,11 @@ const REASON_LABELS = {
 };
 
 const STATUS_MARKS = { MATCH: "✓", PARTIAL: "~", MISSING: "✗" };
+const VERDICT_LABELS = { MATCH: "encontrado", PARTIAL: "parcial", MISSING: "ausente" };
 
 let mode = "pdf";
 let lastResult = null;
+let analysisId = null;
 
 /* ---------- entrada ---------- */
 
@@ -232,6 +235,8 @@ function render(data) {
     const unknownTerms = Array.isArray(data.unknownTerms) ? data.unknownTerms : [];
     const hasScore = typeof data.score === "number";
     const score = hasScore ? data.score : 0;
+    analysisId = newAnalysisId();
+    loadFeedbackSummary();
     lastResult = {
         score: hasScore ? score : null,
         requirements,
@@ -356,7 +361,97 @@ function renderRequirement(item) {
             + "considere deixar isso explícito no currículo.";
         entry.append(hint);
     }
+    entry.append(renderVerdict(item));
     return entry;
+}
+
+/**
+ * Botões para marcar a decisão como certa ou dizer qual seria a certa. Cada
+ * marcação vai para o feedback.csv local e entra no acerto do programa.
+ */
+function renderVerdict(item) {
+    const verdict = document.createElement("div");
+    verdict.className = "verdict";
+    const question = document.createElement("span");
+    question.className = "hint";
+    question.textContent = "A decisão está certa?";
+    verdict.append(question);
+
+    const status = document.createElement("span");
+    status.className = "hint verdict-status";
+    status.setAttribute("role", "status");
+    const order = [item.status, ...GROUPS.map((g) => g.status).filter((s) => s !== item.status)];
+    const buttons = order.map((correctStatus) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "secondary small";
+        button.textContent = correctStatus === item.status
+            ? "Certo"
+            : `Devia ser ${VERDICT_LABELS[correctStatus]}`;
+        button.setAttribute("aria-pressed", "false");
+        button.addEventListener("click", () => sendVerdict(item, correctStatus, button, buttons, status));
+        return button;
+    });
+    verdict.append(...buttons, status);
+    return verdict;
+}
+
+async function sendVerdict(item, correctStatus, button, buttons, status) {
+    status.textContent = "";
+    try {
+        const response = await fetch("/api/feedback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                analysisId,
+                requirement: item.name,
+                programStatus: item.status,
+                correctStatus
+            })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(payload.detail || "Não foi possível salvar a marcação.");
+        }
+        buttons.forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+        status.textContent = "Marcado.";
+        showFeedbackSummary(payload);
+    } catch (error) {
+        status.textContent = error.message || "Não foi possível salvar a marcação.";
+    }
+}
+
+async function loadFeedbackSummary() {
+    feedbackSummary.textContent = "";
+    try {
+        const response = await fetch("/api/feedback/summary");
+        if (response.ok) {
+            showFeedbackSummary(await response.json());
+        }
+    } catch {
+        feedbackSummary.textContent = "";
+    }
+}
+
+function showFeedbackSummary(metrics) {
+    if (!metrics || !metrics.total) {
+        feedbackSummary.textContent =
+            "Marque cada decisão como certa ou errada para medir o acerto do programa.";
+        return;
+    }
+    const match = metrics.byStatus && metrics.byStatus.MATCH;
+    const precision = match && typeof match.precision === "number"
+        ? ` "Encontrado" certo em ${formatScore(match.precision)}% das vezes.`
+        : "";
+    feedbackSummary.textContent = `Suas marcações: ${metrics.total} decisão(ões), `
+        + `${metrics.correct} certa(s) (${formatScore(metrics.accuracy)}%).${precision}`;
+}
+
+function newAnalysisId() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return window.crypto.randomUUID();
+    }
+    return `a-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function tag(text, title) {
