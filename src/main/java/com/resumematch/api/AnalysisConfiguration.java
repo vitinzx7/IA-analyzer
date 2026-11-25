@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.resumematch.analysis.AnalysisService;
 import com.resumematch.dictionary.TechnologyDictionary;
+import com.resumematch.feedback.FeedbackStore;
 import com.resumematch.log.AnalysisCsvLogger;
 import com.resumematch.matcher.JobRequirementExtractor;
 import com.resumematch.matcher.LocalSummaryGenerator;
@@ -60,6 +61,13 @@ public class AnalysisConfiguration {
             @Value("${resumematch.csv.path:analises.csv}") String path,
             @Value("${resumematch.csv.enabled:true}") boolean enabled) {
         return new AnalysisCsvLogger(Path.of(path), enabled);
+    }
+
+    @Bean
+    public FeedbackStore feedbackStore(
+            @Value("${resumematch.feedback.path:feedback.csv}") String path,
+            @Value("${resumematch.feedback.enabled:true}") boolean enabled) {
+        return new FeedbackStore(Path.of(path), enabled);
     }
 
     @Bean

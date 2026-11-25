@@ -44,8 +44,17 @@ public class ApiExceptionHandler {
                 "Nao foi possivel ler o formulario enviado.");
     }
 
+    /**
+     * O JSON pode estar bem formado e falhar na validacao do registro que ele
+     * monta; nesse caso a mensagem da validacao e a que ajuda.
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleMalformedJson(HttpMessageNotReadableException exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof AnalysisException analysis) {
+                return handleAnalysis(analysis);
+            }
+        }
         return problem(HttpStatus.BAD_REQUEST, "JSON invalido",
                 "O corpo da requisicao nao e um JSON valido.");
     }
