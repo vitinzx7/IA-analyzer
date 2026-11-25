@@ -83,6 +83,18 @@ class AnalysisServiceTest {
     }
 
     @Test
+    void devolveOQueNaoFoiAvaliadoNaVaga() {
+        AnalysisResult result = service.analyze(
+                "Desenvolvi uma API em Java.",
+                "Requisitos\nJava.\nInglês técnico.\nDiferenciais\nFerramentas como Jira.");
+
+        assertThat(result.unevaluated()).extracting(r -> r.text())
+                .containsExactly("Inglês técnico.", "Ferramentas como Jira.");
+        assertThat(result.unknownTerms()).containsExactly("Jira");
+        assertThat(result.summary()).contains("2 trecho(s) de requisito da vaga nao foram avaliados");
+    }
+
+    @Test
     void diferencialAusentePesaMetadeNoScore() {
         AnalysisResult result = service.analyze(
                 "Desenvolvi uma API em Java.",

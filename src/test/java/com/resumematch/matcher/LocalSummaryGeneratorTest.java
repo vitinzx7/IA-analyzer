@@ -27,6 +27,22 @@ class LocalSummaryGeneratorTest {
     }
 
     @Test
+    void contaOsTrechosQueNaoForamAvaliados() {
+        JobExtraction job = new JobExtraction(List.of(), List.of(
+                new UnevaluatedItem("Boa comunicação.", JobSection.REQUIREMENTS,
+                        UnevaluatedItem.Reason.NO_KNOWN_TERM),
+                new UnevaluatedItem("Inglês técnico.", JobSection.REQUIREMENTS,
+                        UnevaluatedItem.Reason.LANGUAGE)), List.of());
+
+        assertThat(generator.generate(List.of(match("Java", MatchStatus.MATCH)), 100.0, job))
+                .contains("2 trecho(s) de requisito da vaga nao foram avaliados")
+                .endsWith("O score nao e uma probabilidade de contratacao.");
+        assertThat(generator.generate(List.of(), 0.0, job))
+                .contains("Nenhum requisito reconhecido")
+                .contains("2 trecho(s)");
+    }
+
+    @Test
     void resumeAsContagensDoResultado() {
         String summary = generator.generate(List.of(
                 match("Java", MatchStatus.MATCH),

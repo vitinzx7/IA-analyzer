@@ -73,5 +73,7 @@ class MatcherModelsTest {
         assertThat(result.score()).isEqualTo(50.0);
         assertThat(result.requirements()).containsExactly(match);
         assertThat(result.summary()).isEqualTo("Resumo local");
+        assertThat(result.unevaluated()).isEmpty();
+        assertThat(result.unknownTerms()).isEmpty();
     }
 }

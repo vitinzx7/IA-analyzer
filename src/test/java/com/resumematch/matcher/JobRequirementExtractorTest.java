@@ -212,6 +212,74 @@ class JobRequirementExtractorTest {
     }
 
     @Test
+    void listaTrechosDeRequisitoQueNaoForamAvaliados() {
+        JobExtraction job = extractor.read("""
+                Requisitos
+                Java.
+                Boa comunicação.
+                Inglês técnico para leitura de documentação.
+                Cursando ensino superior em Redes de Computadores.
+                """);
+
+        assertThat(job.requirements()).containsExactly(new JobRequirement("Java", REQUIRED));
+        assertThat(job.unevaluated()).containsExactly(
+                new UnevaluatedItem("Boa comunicação.", JobSection.REQUIREMENTS,
+                        UnevaluatedItem.Reason.NO_KNOWN_TERM),
+                new UnevaluatedItem("Inglês técnico para leitura de documentação.",
+                        JobSection.REQUIREMENTS, UnevaluatedItem.Reason.LANGUAGE),
+                new UnevaluatedItem("Cursando ensino superior em Redes de Computadores.",
+                        JobSection.REQUIREMENTS, UnevaluatedItem.Reason.EDUCATION));
+        assertThat(job.unknownTerms()).isEmpty();
+    }
+
+    @Test
+    void cursoNaFormacaoNaoViraRequisitoTecnico() {
+        assertThat(extractor.extract("Cursando Ciência da Computação ou Redes de Computadores.")).isEmpty();
+        assertThat(extractor.extract("Estar cursando Sistemas de Informação. Conhecimento em Redes de Computadores."))
+                .containsExactly("Redes de Computadores");
+    }
+
+    @Test
+    void naoListaApresentacaoNemBeneficios() {
+        JobExtraction job = extractor.read("""
+                Sobre a vaga
+                Somos uma Empresa Legal que usa Java.
+                Benefícios
+                Vale Refeição.
+                """);
+
+        assertThat(job.requirements()).containsExactly(new JobRequirement("Java", REQUIRED));
+        assertThat(job.unevaluated()).isEmpty();
+        assertThat(job.unknownTerms()).isEmpty();
+    }
+
+    @Test
+    void listaNomesQueODicionarioNaoConhece() {
+        JobExtraction job = extractor.read("""
+                Diferenciais
+                Ferramentas de chamados (Jira, Zendesk, GLPI) ou scripts (PowerShell/Bash).
+                Apoiar contas (Active Directory, Google Workspace / Microsoft 365) nível N1/N2.
+                """);
+
+        assertThat(job.unknownTerms()).containsExactly(
+                "Jira", "Zendesk", "GLPI", "PowerShell", "Bash", "Google Workspace", "N1", "N2");
+        assertThat(job.unevaluated()).extracting(UnevaluatedItem::reason)
+                .containsExactly(UnevaluatedItem.Reason.NO_KNOWN_TERM);
+    }
+
+    @Test
+    void tiraMarcadorDeListaDoTrechoNaoAvaliado() throws IOException {
+        String job = Files.readString(
+                Path.of("src/test/resources/vagas-sinteticas/vaga3_estagio_infra_cloud.txt"));
+
+        assertThat(extractor.read(job).unevaluated()).contains(
+                new UnevaluatedItem("Estar cursando ensino superior em TI.", JobSection.REQUIREMENTS,
+                        UnevaluatedItem.Reason.EDUCATION),
+                new UnevaluatedItem("Documentar procedimentos técnicos.", JobSection.RESPONSIBILITIES,
+                        UnevaluatedItem.Reason.NO_KNOWN_TERM));
+    }
+
+    @Test
     void leSecoesComMarcadorDeLista() throws IOException {
         String job = Files.readString(
                 Path.of("src/test/resources/vagas-sinteticas/vaga3_estagio_infra_cloud.txt"));
