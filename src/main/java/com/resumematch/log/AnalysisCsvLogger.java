@@ -79,19 +79,6 @@ public final class AnalysisCsvLogger implements AnalysisLog {
     }
 
     private String csv(String value) {
-        if (value == null || value.isBlank()) {
-            return "";
-        }
-        String clean = value.replace("\r\n", " ")
-                .replace('\n', ' ')
-                .replace('\r', ' ')
-                .strip();
-        if (!clean.isEmpty() && "=+-@\t".indexOf(clean.charAt(0)) >= 0) {
-            clean = "'" + clean;
-        }
-        if (clean.contains(",") || clean.contains("\"")) {
-            return "\"" + clean.replace("\"", "\"\"") + "\"";
-        }
-        return clean;
+        return CsvCells.cell(value);
     }
 }
