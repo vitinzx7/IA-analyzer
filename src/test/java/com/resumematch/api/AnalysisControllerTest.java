@@ -80,6 +80,25 @@ class AnalysisControllerTest {
     }
 
     @Test
+    void mandaASimulacaoDeMelhoraSemMudarOScore() throws Exception {
+        mockMvc.perform(post("/api/analyze/text")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"resume":"Desenvolvi uma API em Java.\\nTecnologias: Docker.",
+                         "job":"Java, Docker, AWS, Back-end"}
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.score").value(37.5))
+                .andExpect(jsonPath("$.improvement.suggestions[0].requirement").value("Back-end"))
+                .andExpect(jsonPath("$.improvement.suggestions[0].type").value("INDICATED"))
+                .andExpect(jsonPath("$.improvement.suggestions[0].indicator").value("Java"))
+                .andExpect(jsonPath("$.improvement.suggestions[0].points").value(25.0))
+                .andExpect(jsonPath("$.improvement.suggestions[1].type").value("LIST_ONLY"))
+                .andExpect(jsonPath("$.improvement.scoreWithAll").value(75.0))
+                .andExpect(jsonPath("$.improvement.gaps[0].requirement").value("AWS"));
+    }
+
+    @Test
     void mandaAPrioridadeDeCadaRequisito() throws Exception {
         mockMvc.perform(post("/api/analyze/text")
                 .contentType(MediaType.APPLICATION_JSON)

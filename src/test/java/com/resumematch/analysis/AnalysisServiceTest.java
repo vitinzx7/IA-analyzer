@@ -58,6 +58,22 @@ class AnalysisServiceTest {
     }
 
     @Test
+    void simulacaoDeMelhoraNaoMudaACobertura() {
+        AnalysisResult result = service.analyze(
+                "Tecnologias: React.\nDesenvolvi uma API em Java.",
+                "Java, React, Back-end, AWS");
+
+        assertThat(result.requirements()).extracting(r -> r.status())
+                .containsExactly(MatchStatus.MATCH, MatchStatus.PARTIAL, MatchStatus.MISSING,
+                        MatchStatus.MISSING);
+        assertThat(result.score()).isEqualTo(37.5)
+                .isEqualTo(new ScoreCalculator().calculate(result.requirements()));
+        assertThat(result.improvement().suggestions()).extracting(s -> s.requirement())
+                .containsExactly("Back-end", "React");
+        assertThat(result.improvement().scoreWithAll()).isEqualTo(75.0);
+    }
+
+    @Test
     void grupoDeAlternativasValeUmRequisitoNoScore() {
         AnalysisResult result = service.analyze(
                 "Desenvolvi e publiquei no Azure Container Apps.",

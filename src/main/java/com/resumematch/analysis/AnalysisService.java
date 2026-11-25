@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import com.resumematch.matcher.AnalysisResult;
+import com.resumematch.matcher.ImprovementSimulator;
 import com.resumematch.matcher.JobExtraction;
 import com.resumematch.matcher.JobRequirementExtractor;
 import com.resumematch.matcher.ProfileEvidence;
@@ -32,6 +33,7 @@ public final class AnalysisService {
     private final ScoreCalculator scoreCalculator;
     private final SummaryGenerator summaryGenerator;
     private final AnalysisLog analysisLog;
+    private final ImprovementSimulator improvementSimulator;
 
     public AnalysisService(PdfTextExtractor pdfTextExtractor,
             SentenceSplitter sentenceSplitter,
@@ -57,6 +59,7 @@ public final class AnalysisService {
         this.scoreCalculator = scoreCalculator;
         this.summaryGenerator = summaryGenerator;
         this.analysisLog = analysisLog == null ? AnalysisLog.NONE : analysisLog;
+        this.improvementSimulator = new ImprovementSimulator(matcher, scoreCalculator);
     }
 
     public AnalysisResult analyze(String resumeText, String jobText) {
@@ -78,7 +81,7 @@ public final class AnalysisService {
         String summary = summaryGenerator.generate(matches, score, job) + hiddenTextNote(pdfCheck);
         AnalysisResult result = new AnalysisResult(matches.isEmpty() ? null : score, matches, summary,
                 ProfileEvidence.attach(job.unevaluated(), resumeText, sentences), job.unknownTerms(),
-                pdfCheck);
+                pdfCheck, improvementSimulator.simulate(matches, resumeText, sentences));
         analysisLog.log(result);
         return result;
     }
