@@ -153,6 +153,49 @@ resumematch.csv.enabled=false
 resumematch.csv.path=/caminho/analises.csv
 ```
 
+## Medir o acerto
+
+Cada requisito do resultado tem os botões "Certo" e "Devia ser …". Cada
+marcação grava uma linha em `feedback.csv`, também local e fora do Git:
+
+```csv
+data,analise,requisito,status_programa,status_correto
+2026-11-24,cb7317ba-...,Docker,PARTIAL,MISSING
+```
+
+O arquivo não guarda trecho do currículo, só o nome do requisito e os dois
+status. A tela mostra o acerto acumulado, e a API também:
+
+```bash
+curl http://localhost:8080/api/feedback/summary
+```
+
+```json
+{
+  "total": 2, "correct": 1, "accuracy": 50.0,
+  "byStatus": {
+    "MATCH":   { "marked": 1, "markedCorrect": 1, "precision": 100.0, "expected": 1, "found": 1, "recall": 100.0 },
+    "PARTIAL": { "marked": 1, "markedCorrect": 0, "precision": 0.0,   "expected": 0, "found": 0, "recall": null },
+    "MISSING": { "marked": 0, "markedCorrect": 0, "precision": null,  "expected": 1, "found": 0, "recall": 0.0 }
+  }
+}
+```
+
+- **Precisão** de um status: das vezes em que o programa disse aquilo, quantas
+  estavam certas. MATCH sem merecer derruba a precisão de MATCH (falso
+  positivo).
+- **Revocação**: das vezes em que aquele era o status certo, quantas o programa
+  acertou. MISSING com evidência no currículo derruba a revocação de MATCH e
+  PARTIAL (falso negativo).
+
+Marcar o mesmo requisito de novo na mesma análise substitui a marcação
+anterior. Para desligar ou mudar o caminho:
+
+```properties
+resumematch.feedback.enabled=false
+resumematch.feedback.path=/caminho/feedback.csv
+```
+
 ## Limitações
 
 - **Requisito fora do dicionário não é contado.** O denominador do score inclui

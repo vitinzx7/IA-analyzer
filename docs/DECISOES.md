@@ -470,6 +470,39 @@ e para mostrar onde o dicionário precisa crescer.
 
 ---
 
+## D16 — Medir o acerto com marcações de certo ou errado
+
+Implementado em `Feedback`, `FeedbackStore`, `FeedbackMetrics`,
+`FeedbackController` e `app.js`.
+
+Problema real: o score foi comparado com notas dadas por opinião, que variavam
+de 50 a 80 para o mesmo currículo. Não existe conjunto público em português de
+pares currículo × vaga com rótulo humano, e o plano já pedia marcar à mão os
+falsos positivos e falsos negativos (5.2).
+
+Regra: cada decisão do resultado pode ser marcada como certa, ou como "devia
+ser" outro status. A marcação vai para `feedback.csv` com data, identificador
+da análise (gerado pela tela), nome do requisito, status do programa e status
+correto. Nenhum trecho do currículo entra no arquivo. A mesma marcação repetida
+na mesma análise vale uma vez só, a última.
+
+Métricas por status, arredondadas para uma casa:
+
+```
+precisão  = marcações certas com status X / marcações em que o programa disse X
+revocação = marcações certas com status X / marcações em que o certo era X
+acerto    = marcações certas / total
+```
+
+Proporção sem nenhum caso fica `null`, não `0`. Com o registro desligado, a
+API recusa a marcação com uma mensagem em vez de fingir que gravou.
+
+É isso que permite calibrar os pesos da D13 e medir se uma mudança de regra
+melhora ou piora: marcar um conjunto de análises, mudar a regra, analisar de
+novo e comparar.
+
+---
+
 ## Observações do texto real (Bloco 1)
 
 Extraídas de um único currículo real, 3050 caracteres, coluna única. Sustentam

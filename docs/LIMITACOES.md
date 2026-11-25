@@ -293,8 +293,17 @@ como "Engenharia de Controle e Automação".
 
 ## L19 — Pesos de obrigatório e diferencial não são medidos · ABERTA
 
-Os pesos 1,0 e 0,5 (D13) são ponto de partida. Não há ainda um conjunto de
-decisões marcadas como certas ou erradas para calibrá-los.
+Os pesos 1,0 e 0,5 (D13) são ponto de partida. Desde a D16 existe como marcar
+decisões como certas ou erradas, mas ainda não há marcações suficientes para
+calibrá-los.
+
+O acerto da D16 mede o status de cada requisito, não o peso: ele diz se
+"Docker" devia ser PARTIAL, mas não se um diferencial devia valer 0,5 ou 0,3.
+Para o peso, é preciso comparar o score com uma nota de referência por
+análise, o que ainda não existe.
+
+As marcações não guardam o texto analisado. Depois de mudar uma regra, é
+preciso analisar de novo os mesmos currículos e vagas para comparar.
 
 ---
 
