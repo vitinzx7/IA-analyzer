@@ -3,7 +3,7 @@
 Problemas identificados e **não** resolvidos, com o motivo de não terem sido
 resolvidos. Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: negação do termo, ponto em nomes e score nulo.
+Última atualização: seções da vaga, conjuntos e itens não avaliados.
 
 Estado: `ABERTA` (não tratada) · `MITIGADA` (tratada em parte) ·
 `RESOLVIDA` (com o bloco que resolveu).
@@ -42,7 +42,8 @@ pelo sistema.
 **Mitigação implementada:** a interface mostra quantos requisitos foram
 reconhecidos e o README documenta a limitação. O denominador continua sendo
 apenas o que o dicionário conhece; requisitos desconhecidos seguem sem entrar
-no cálculo.
+no cálculo. Desde a D15, os trechos de requisito sem termo do dicionário e os
+nomes que ele não conhece aparecem na tela como "não avaliado".
 
 ---
 
@@ -267,6 +268,33 @@ análise sintática, e a D1 recusa número arbitrário sem evidência.
 Para não cortar `Node.js` e `github.com/x/y`, um ponto colado entre letra e
 minúscula nunca separa frase. Um erro de digitação como "Desenvolvi a
 API.depois configurei" vira uma frase só.
+
+---
+
+## L17 — Seções da vaga dependem de títulos conhecidos · ABERTA
+
+`JobSegments` só reconhece os títulos da lista em D13. Uma vaga com título
+diferente ("O que você vai encontrar aqui", "Stack") fica na seção anterior, e
+uma vaga sem título nenhum é lida inteira como GENERAL: tudo vale como
+obrigatório e nada entra na lista de "não avaliado". Um título sem
+dois-pontos com palavra fora da lista de qualificação ("Atividades
+administrativas") também não é reconhecido.
+
+---
+
+## L18 — Trecho de formação esconde termo técnico que venha depois · ABERTA
+
+O trecho que começa por formação não gera requisito técnico (D15). Em
+"Graduação em TI e experiência com Java", sem ponto ou ponto e vírgula entre
+as duas partes, o Java some. Cortar o trecho no "e" quebraria nomes de curso
+como "Engenharia de Controle e Automação".
+
+---
+
+## L19 — Pesos de obrigatório e diferencial não são medidos · ABERTA
+
+Os pesos 1,0 e 0,5 (D13) são ponto de partida. Não há ainda um conjunto de
+decisões marcadas como certas ou erradas para calibrá-los.
 
 ---
 

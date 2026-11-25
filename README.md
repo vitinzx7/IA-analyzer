@@ -69,13 +69,27 @@ Resposta:
 {
   "score": 50.0,
   "requirements": [
-    { "name": "Java", "status": "MATCH", "evidence": "Desenvolvi uma API em Java." },
-    { "name": "Docker", "status": "PARTIAL", "evidence": "Tecnologias: Docker, Git." },
-    { "name": "AWS", "status": "MISSING", "evidence": null }
+    { "name": "Java", "status": "MATCH", "evidence": "Desenvolvi uma API em Java.",
+      "priority": "REQUIRED", "components": [] },
+    { "name": "Docker", "status": "PARTIAL", "evidence": "Tecnologias: Docker, Git.",
+      "priority": "REQUIRED", "components": [] },
+    { "name": "AWS", "status": "MISSING", "evidence": null,
+      "priority": "REQUIRED", "components": [] }
   ],
-  "summary": "Score 50/100: ..."
+  "summary": "Score 50/100: ...",
+  "unevaluated": [],
+  "unknownTerms": []
 }
 ```
+
+- `priority`: `REQUIRED` (obrigatório, peso 1) ou `PREFERRED` (diferencial,
+  peso 0,5).
+- `components`: decisão de cada parte quando o requisito é um conjunto, como
+  `TCP/IP + DNS + DHCP`.
+- `unevaluated`: trechos de requisito da vaga que não entraram no score, com
+  a seção e o motivo (`EDUCATION`, `LANGUAGE` ou `NO_KNOWN_TERM`).
+- `unknownTerms`: nomes da vaga que parecem tecnologia mas o dicionário não
+  conhece.
 
 Erros seguem o formato `ProblemDetail` (RFC 9457), com `title` e `detail`.
 
@@ -94,13 +108,21 @@ Os verbos considerados são: desenvolvi, implementei, criei, publiquei, realizei
 utilizei, configurei, apoiei, mantive, escrevi.
 
 Uma vaga que diga "Azure, AWS ou GCP" gera um único requisito de alternativas,
-satisfeito por qualquer uma das três (ver D11 em `docs/DECISOES.md`).
+satisfeito por qualquer uma das três (ver D11 em `docs/DECISOES.md`). Termos
+entre parênteses, como "noções de redes (TCP/IP, DNS, DHCP)", viram um único
+conjunto, avaliado parte por parte (D14).
+
+A vaga é lida por seção (D13). O que está em "Diferenciais", ou num trecho
+com "desejável", vale metade. O que está em benefícios, local e horário não é
+requisito. Formação, idioma e trechos sem termo do dicionário aparecem na
+tela como "não avaliado" (D15).
 
 O score é a média ponderada dos status, em uma escala de 0 a 100:
 
 ```
 MATCH = 1,0 ponto · PARTIAL = 0,5 ponto · MISSING = 0 ponto
-score = pontos obtidos / pontos possíveis × 100
+peso: obrigatório = 1 · diferencial = 0,5
+score = Σ (peso × pontos) / Σ peso × 100
 ```
 
 O resultado é arredondado para uma casa decimal. Vaga sem nenhum requisito

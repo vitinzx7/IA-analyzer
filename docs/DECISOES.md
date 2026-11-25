@@ -195,12 +195,13 @@ Implementado no Bloco 4 (`ScoreCalculator`).
 
 ```
 MATCH = 1,0 · PARTIAL = 0,5 · MISSING = 0,0
-score = pontos obtidos / total de requisitos reconhecidos × 100
+peso: obrigatório = 1,0 · diferencial = 0,5 (ver D13)
+score = Σ (peso × pontos) / Σ peso × 100
 ```
 
-Arredondado para uma casa decimal. O denominador é sempre o número de
+Arredondado para uma casa decimal. O denominador é a soma dos pesos dos
 requisitos **reconhecidos**, não o número de requisitos escritos na vaga (ver
-L2).
+L2). Sem diferencial na vaga, a fórmula é igual à original: todos pesam 1.
 
 Quando nenhum requisito é reconhecido, a API devolve `"score": null`, e não
 `0`: não existe nota a calcular, e o resumo já diz isso. O `ScoreCalculator`
@@ -289,6 +290,7 @@ hospedagem de Git GitHub, GitLab
 ```
 
 `Windows/Linux` não agrupa: em vaga de suporte a barra costuma pedir os dois.
+Entre parênteses, "(Windows/Linux)" vira um conjunto (ver D14).
 
 O grupo é satisfeito por qualquer opção que tenha evidência, segue a mesma
 regra D1 e vale **1** requisito no score. Uma tecnologia que já está num grupo
@@ -311,6 +313,124 @@ CSV, e-mail vira `[email]` e telefone vira `[telefone]`.
 O padrão de telefone exige DDD. Sem essa exigência, "2026-2028" teria o mesmo
 formato de um telefone de oito dígitos. Verificado em teste que ano, versão
 ("Java 21"), período ("01/2024 - 12/2025") e IP não são mascarados.
+
+---
+
+## D13 — Seções da vaga e peso do diferencial
+
+Implementado em `JobSegments`, `JobRequirementExtractor`,
+`RequirementPriority` e `ScoreCalculator`.
+
+Problema real: numa vaga de estágio em infraestrutura, obrigatório,
+responsabilidade e diferencial pesavam igual, e um termo citado em benefícios
+ou no endereço podia virar requisito.
+
+Regra: a vaga é lida em trechos (a linha cortada depois de ".", ";", "!" ou
+"?" seguidos de espaço). Um título conhecido muda a seção até o próximo
+título:
+
+```
+Requisitos, Qualificações, Perfil, Conhecimentos ...     -> REQUIREMENTS
+Responsabilidades, Atribuições, Atividades ...           -> RESPONSIBILITIES
+Diferenciais, Desejável, Será um diferencial, Plus ...   -> PREFERRED
+Benefícios, Informações adicionais, Local, Horário ...   -> IGNORED
+Sobre a vaga, Descrição ...                              -> GENERAL
+```
+
+O título pode ocupar a linha ("Diferenciais") ou abrir a linha com
+dois-pontos ("Requisitos: Java"). Sem dois-pontos, a linha só é título se tiver
+o título e palavras de qualificação ("Benefícios oferecidos", "Requisitos e
+qualificações"); assim "Habilidades de comunicação" não muda de seção. Um
+rótulo com termo do dicionário nunca é título: "Conhecimentos em Java" é
+requisito.
+
+Prioridade do trecho:
+
+```
+"imprescindível", "obrigatório", "indispensável", "essencial"   -> REQUIRED
+seção PREFERRED, ou "desejável", "diferencial", "plus", "bônus"  -> PREFERRED
+o resto (inclusive GENERAL e RESPONSIBILITIES)                   -> REQUIRED
+```
+
+O que está em IGNORED não vira requisito. Um requisito citado em mais de um
+trecho fica com a maior prioridade.
+
+Peso: obrigatório 1,0, diferencial 0,5. **Os dois números são ponto de
+partida, não medida.** As propostas consideradas sugeriam pesos diferentes
+entre si (3/2/1/0,5; 1/0,8/0,4; 1/0,5), o que mostra que o peso precisa ser
+calibrado com decisões marcadas como certas ou erradas, não escolhido por
+opinião. Responsabilidade pesa como obrigatório porque costuma
+repetir o requisito com outras palavras.
+
+---
+
+## D14 — Termos entre parênteses viram um requisito
+
+Implementado em `JobRequirementExtractor`, `JobRequirement` e
+`RequirementMatcher`.
+
+Problema real: "noções de redes (TCP/IP, DNS, DHCP)" virava três requisitos.
+Junto com "Redes de Computadores", uma linha da vaga chegava a 40% do score.
+
+Regra: dois ou mais termos diferentes dentro do mesmo parêntese viram um
+requisito só.
+
+```
+"(TCP/IP, DNS, DHCP)"                         -> conjunto TCP/IP + DNS + DHCP
+"(Windows/Linux)"                             -> conjunto Windows + Linux
+"(AWS, Azure ou GCP)"                         -> alternativas (regra D11)
+"(ex.: UiPath, Blue Prism ou similares)"      -> alternativas: UiPath / Blue Prism
+"(Python, VBA, SQL, etc.)"                    -> alternativas: Python / VBA / SQL
+"RPA (Robotic Process Automation)"            -> RPA, nada muda
+```
+
+"ex.", "como", "etc.", "similares", "outros" ou "afins" no parêntese indicam
+lista de exemplos: qualquer um basta. Sem essas palavras, a lista é um
+conjunto, avaliado parte por parte:
+
+```
+todas as partes MATCH       -> MATCH
+nenhuma parte aparece       -> MISSING
+o resto                     -> PARTIAL
+```
+
+O conjunto continua no modelo de D1 e D7 (1 / 0,5 / 0): não há ponto
+fracionado. A evidência é a da primeira parte com MATCH, ou da primeira com
+PARTIAL. A API manda a decisão de cada parte em `components`.
+
+**Diferença em relação às propostas da pesquisa.** Uma proposta dava 1/N por
+parte; outra dava MATCH com uma parte só. A primeira foge do modelo 1 / 0,5 /
+0; a segunda daria nota cheia a quem só sabe DNS numa vaga que pede TCP/IP,
+DNS e DHCP. Também foi descartado transformar toda lista com "e" num
+conjunto: "Java, Spring Boot, Docker e Kubernetes" viraria um requisito só, o
+mesmo erro que a D11 corrigiu.
+
+---
+
+## D15 — O que não foi avaliado aparece na tela
+
+Implementado em `JobRequirementExtractor`, `UnknownTerms`, `JobExtraction` e
+`app.js`.
+
+Problema real: formação, idioma e ferramentas fora do dicionário (Jira, GLPI,
+PowerShell) sumiam sem aviso, e o número parecia cobrir a vaga inteira.
+
+Regra: nos trechos de requisitos, responsabilidades e diferenciais:
+
+- trecho que começa por formação ("Cursando", "Ensino superior", "Graduação",
+  "Formação"...) vai para a lista com motivo `EDUCATION` e **não gera
+  requisito técnico**: em "Cursando ... Redes de Computadores" o termo é nome
+  de curso;
+- trecho sem termo do dicionário vai para a lista com motivo `LANGUAGE` (se
+  cita idioma) ou `NO_KNOWN_TERM`;
+- palavra com maiúscula no meio da frase que o dicionário não reconhece vai
+  para `unknownTerms` ("Jira", "GLPI", "Google Workspace"). A primeira palavra
+  do trecho só conta se tiver maiúscula além da inicial ("PowerShell" conta,
+  "Apoiar" não).
+
+A apresentação da empresa e os benefícios não entram na lista. Nada disso
+entra no score; a lista existe para que a pessoa saiba o que conferir sozinha
+e para mostrar onde o dicionário precisa crescer.
 
 ---
 
