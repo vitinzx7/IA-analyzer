@@ -92,6 +92,19 @@ class AnalysisControllerTest {
     }
 
     @Test
+    void mandaOIdiomaEncontradoNoCurriculo() throws Exception {
+        mockMvc.perform(post("/api/analyze/text")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"resume":"Desenvolvi uma API em Java.\\nIDIOMAS\\nInglês intermediário",
+                         "job":"Requisitos:\\nJava.\\nInglês técnico."}
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.unevaluated[0].reason").value("LANGUAGE"))
+                .andExpect(jsonPath("$.unevaluated[0].resumeEvidence").value("Inglês intermediário"));
+    }
+
+    @Test
     void mandaASecaoDaEvidencia() throws Exception {
         mockMvc.perform(post("/api/analyze/text")
                 .contentType(MediaType.APPLICATION_JSON)

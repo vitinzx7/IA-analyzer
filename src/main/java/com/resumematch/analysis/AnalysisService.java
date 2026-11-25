@@ -6,6 +6,7 @@ import java.util.List;
 import com.resumematch.matcher.AnalysisResult;
 import com.resumematch.matcher.JobExtraction;
 import com.resumematch.matcher.JobRequirementExtractor;
+import com.resumematch.matcher.ProfileEvidence;
 import com.resumematch.matcher.RequirementMatch;
 import com.resumematch.matcher.RequirementMatcher;
 import com.resumematch.matcher.ScoreCalculator;
@@ -65,7 +66,7 @@ public final class AnalysisService {
         double score = scoreCalculator.calculate(matches);
         String summary = summaryGenerator.generate(matches, score, job);
         AnalysisResult result = new AnalysisResult(matches.isEmpty() ? null : score, matches, summary,
-                job.unevaluated(), job.unknownTerms());
+                ProfileEvidence.attach(job.unevaluated(), resumeText, sentences), job.unknownTerms());
         analysisLog.log(result);
         return result;
     }
