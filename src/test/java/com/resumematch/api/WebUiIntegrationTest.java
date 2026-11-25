@@ -6,6 +6,10 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -64,6 +68,21 @@ class WebUiIntegrationTest {
                 .contains("Valores arredondados")
                 .doesNotContain("Lacuna real");
         assertThat(get("/").body()).contains("id=\"simulation-rounding\"");
+    }
+
+    /**
+     * Um id repetido deixa o querySelector pegar so o primeiro elemento: a tela
+     * passa nos testes de conteudo e escreve numa copia que ninguem ve.
+     */
+    @Test
+    void paginaNaoRepeteId() throws Exception {
+        Matcher matcher = Pattern.compile("(?<![\\w-])id=\"([^\"]+)\"").matcher(get("/").body());
+        List<String> ids = new ArrayList<>();
+        while (matcher.find()) {
+            ids.add(matcher.group(1));
+        }
+
+        assertThat(ids).contains("simulation", "simulation-rounding").doesNotHaveDuplicates();
     }
 
     @Test
