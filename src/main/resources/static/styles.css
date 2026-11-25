@@ -312,6 +312,16 @@ button.loading .spinner {
     color: var(--error-ink);
 }
 
+.warning {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid color-mix(in srgb, var(--partial) 50%, transparent);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--partial) 12%, transparent);
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
 /* ---------- resultado ---------- */
 
 .result {

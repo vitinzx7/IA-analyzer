@@ -32,6 +32,10 @@ const copyStatus = document.querySelector("#copy-status");
 const again = document.querySelector("#again");
 const feedbackSummary = document.querySelector("#feedback-summary");
 const requiredGap = document.querySelector("#required-gap");
+const pdfWarning = document.querySelector("#pdf-warning");
+
+/** Mesmo limite do servidor: abaixo disso é ruído do PDF. */
+const MIN_HIDDEN_CHARS = 10;
 
 const DEFAULT_FILE_LABEL = fileLabel.textContent;
 const DEFAULT_FILE_DETAIL = fileDetail.textContent;
@@ -250,6 +254,7 @@ function render(data) {
     analysisId = newAnalysisId();
     loadFeedbackSummary();
     lastResult = {
+        pdfWarning: pdfWarningText(data.pdfCheck),
         score: hasScore ? score : null,
         requirements,
         unevaluated,
@@ -259,6 +264,9 @@ function render(data) {
 
     scoreElement.textContent = hasScore ? formatScore(score) : "Sem cálculo";
     requiredGap.textContent = requiredGapText(requirements);
+    const warning = pdfWarningText(data.pdfCheck);
+    pdfWarning.textContent = warning;
+    pdfWarning.hidden = !warning;
     scoreElement.parentElement.classList.toggle("no-score", !hasScore);
     scoreMax.hidden = !hasScore;
     tally.hidden = requirements.length === 0;
@@ -471,6 +479,36 @@ function newAnalysisId() {
     return `a-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/**
+ * Texto que uma pessoa não vê no PDF. Invisível e transparente ficaram fora da
+ * análise; branco, minúsculo e fora da página entraram, mas podem ser legítimos.
+ */
+function pdfWarningText(check) {
+    if (!check) {
+        return "";
+    }
+    if (check.scannedLayer) {
+        return "O PDF parece escaneado com camada de texto (OCR): o texto fica invisível "
+            + "por cima da imagem. A análise usou essa camada.";
+    }
+    const parts = [];
+    if (check.invisibleChars >= MIN_HIDDEN_CHARS) {
+        parts.push(`O PDF tinha ${check.invisibleChars} caracteres invisíveis ou transparentes, `
+            + `que ficaram fora da análise: "${check.invisibleSample}".`);
+    }
+    const suspicious = [
+        check.whiteChars >= MIN_HIDDEN_CHARS ? `${check.whiteChars} em branco` : null,
+        check.tinyChars >= MIN_HIDDEN_CHARS ? `${check.tinyChars} em fonte minúscula` : null,
+        check.outsideChars >= MIN_HIDDEN_CHARS ? `${check.outsideChars} fora da página` : null
+    ].filter(Boolean);
+    if (suspicious.length > 0) {
+        parts.push(`O PDF tem caracteres suspeitos: ${suspicious.join(", ")}. Eles entraram na análise: `
+            + "pode ser texto escondido ou só letra branca sobre fundo escuro. "
+            + `Trecho: "${check.suspiciousSample}".`);
+    }
+    return parts.join(" ");
+}
+
 /** Quantos obrigatórios têm alguma evidência e quais não têm nenhuma. */
 function requiredGapText(requirements) {
     const required = requirements.filter((r) => r.priority !== "PREFERRED");
@@ -612,6 +650,9 @@ function report(data) {
             : `Resume Match: cobertura técnica ${formatScore(data.score)}/100`,
         ""
     ];
+    if (data.pdfWarning) {
+        lines.push(`Aviso do PDF: ${data.pdfWarning}`, "");
+    }
     for (const group of GROUPS) {
         const items = data.requirements.filter((r) => r.status === group.status);
         if (items.length === 0) {

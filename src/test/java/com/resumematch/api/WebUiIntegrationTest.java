@@ -72,6 +72,15 @@ class WebUiIntegrationTest {
                 .contains("resumeEvidence");
     }
 
+    @Test
+    void telaAvisaSobreTextoEscondidoNoPdf() throws Exception {
+        assertThat(get("/").body()).contains("id=\"pdf-warning\"");
+        assertThat(get("/app.js").body())
+                .contains("data.pdfCheck")
+                .contains("invisibleChars")
+                .contains("scannedLayer");
+    }
+
     private HttpResponse<String> get(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + path))
