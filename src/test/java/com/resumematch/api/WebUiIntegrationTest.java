@@ -43,6 +43,15 @@ class WebUiIntegrationTest {
         assertThat(get("/app.js").body()).contains("/api/analyze/text");
     }
 
+    @Test
+    void scriptMostraDiferencialConjuntoEONaoAvaliado() throws Exception {
+        assertThat(get("/app.js").body())
+                .contains("data.unevaluated")
+                .contains("data.unknownTerms")
+                .contains("item.components")
+                .contains("\"PREFERRED\"");
+    }
+
     private HttpResponse<String> get(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + path))

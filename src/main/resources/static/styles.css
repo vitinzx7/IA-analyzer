@@ -488,6 +488,39 @@ button.loading .spinner {
     vertical-align: middle;
 }
 
+.parts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 10px;
+    padding: 0;
+    list-style: none;
+}
+
+.parts .chip {
+    padding: 2px 8px;
+    font-size: 0.78rem;
+}
+
+.group.unevaluated {
+    border-left-color: var(--muted);
+    border-style: dashed;
+    border-left-style: solid;
+}
+
+.unevaluated-text {
+    margin: 0 0 6px;
+    overflow-wrap: anywhere;
+}
+
+.unevaluated .requirement .hint {
+    margin: 0;
+}
+
+.unevaluated .tag {
+    margin: 0 4px 0 0;
+}
+
 .requirement blockquote {
     margin: 0;
     padding-left: 12px;

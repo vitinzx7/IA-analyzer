@@ -58,6 +58,21 @@ const GROUPS = [
     }
 ];
 
+const SECTION_LABELS = {
+    REQUIREMENTS: "Requisitos",
+    RESPONSIBILITIES: "Responsabilidades",
+    PREFERRED: "Diferenciais",
+    GENERAL: "Vaga"
+};
+
+const REASON_LABELS = {
+    EDUCATION: "formação: o programa ainda não compara curso",
+    LANGUAGE: "idioma: o programa ainda não compara idioma",
+    NO_KNOWN_TERM: "nenhum termo do dicionário"
+};
+
+const STATUS_MARKS = { MATCH: "✓", PARTIAL: "~", MISSING: "✗" };
+
 let mode = "pdf";
 let lastResult = null;
 
@@ -213,9 +228,17 @@ function pdfForm(job) {
 
 function render(data) {
     const requirements = Array.isArray(data.requirements) ? data.requirements : [];
+    const unevaluated = Array.isArray(data.unevaluated) ? data.unevaluated : [];
+    const unknownTerms = Array.isArray(data.unknownTerms) ? data.unknownTerms : [];
     const hasScore = typeof data.score === "number";
     const score = hasScore ? data.score : 0;
-    lastResult = { score: hasScore ? score : null, requirements, summary: data.summary || "" };
+    lastResult = {
+        score: hasScore ? score : null,
+        requirements,
+        unevaluated,
+        unknownTerms,
+        summary: data.summary || ""
+    };
 
     scoreElement.textContent = hasScore ? formatScore(score) : "Sem nota";
     scoreElement.parentElement.classList.toggle("no-score", !hasScore);
@@ -240,9 +263,13 @@ function render(data) {
     summary.textContent = data.summary || "";
     copyStatus.textContent = "";
 
-    groups.replaceChildren(...(requirements.length === 0
+    const sections = requirements.length === 0
         ? []
-        : GROUPS.map((group) => renderGroup(group, requirements))));
+        : GROUPS.map((group) => renderGroup(group, requirements));
+    if (unevaluated.length > 0 || unknownTerms.length > 0) {
+        sections.push(renderUnevaluated(unevaluated, unknownTerms));
+    }
+    groups.replaceChildren(...sections);
     result.hidden = false;
     result.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -283,20 +310,40 @@ function renderGroup(group, requirements) {
 }
 
 function renderRequirement(item) {
-    const options = String(item.name).split(ALTERNATIVE_SEPARATOR);
+    const components = Array.isArray(item.components) ? item.components : [];
+    const options = components.length > 0
+        ? components.map((component) => component.name)
+        : String(item.name).split(ALTERNATIVE_SEPARATOR);
     const entry = document.createElement("li");
     entry.className = "requirement";
 
     const name = document.createElement("h3");
     name.textContent = options.join(" · ");
-    if (options.length > 1) {
-        const tag = document.createElement("span");
-        tag.className = "tag";
-        tag.textContent = "qualquer uma";
-        tag.title = "A vaga aceita qualquer uma destas tecnologias.";
-        name.append(" ", tag);
+    if (components.length > 0) {
+        name.append(" ", tag("conjunto",
+            "Todas as partes com frase de ação: encontrado. Só algumas: parcial."));
+    } else if (options.length > 1) {
+        name.append(" ", tag("qualquer uma", "A vaga aceita qualquer uma destas tecnologias."));
+    }
+    if (item.priority === "PREFERRED") {
+        name.append(" ", tag("diferencial", "Diferencial: vale metade no score."));
     }
     entry.append(name);
+
+    if (components.length > 0) {
+        const parts = document.createElement("ul");
+        parts.className = "parts";
+        parts.setAttribute("aria-label", "Partes do conjunto");
+        for (const component of components) {
+            const part = document.createElement("li");
+            const group = GROUPS.find((g) => g.status === component.status);
+            part.className = `chip ${group ? group.className : ""}`;
+            part.textContent = `${STATUS_MARKS[component.status] || ""} ${component.name}`;
+            part.title = group ? group.title : "";
+            parts.append(part);
+        }
+        entry.append(parts);
+    }
 
     if (item.evidence) {
         const evidence = document.createElement("blockquote");
@@ -310,6 +357,69 @@ function renderRequirement(item) {
         entry.append(hint);
     }
     return entry;
+}
+
+function tag(text, title) {
+    const element = document.createElement("span");
+    element.className = "tag";
+    element.textContent = text;
+    element.title = title;
+    return element;
+}
+
+/**
+ * Mostra o que a vaga pede e o programa não avaliou: trechos sem termo do
+ * dicionário, formação, idioma e nomes que o dicionário não conhece.
+ */
+function renderUnevaluated(items, unknownTerms) {
+    const section = document.createElement("section");
+    section.className = "group unevaluated";
+
+    const header = document.createElement("div");
+    header.className = "group-header";
+    const title = document.createElement("h2");
+    title.textContent = "Não avaliado pelo programa";
+    const note = document.createElement("p");
+    note.className = "hint";
+    note.textContent = "Estes trechos da vaga não entraram no score. Confira você mesmo.";
+    header.append(title, note);
+    section.append(header);
+
+    if (items.length > 0) {
+        const list = document.createElement("ul");
+        list.className = "requirement-list";
+        for (const item of items) {
+            const entry = document.createElement("li");
+            entry.className = "requirement";
+            const text = document.createElement("p");
+            text.className = "unevaluated-text";
+            text.textContent = item.text;
+            const reason = document.createElement("p");
+            reason.className = "hint";
+            reason.append(
+                tag(SECTION_LABELS[item.section] || "Vaga", "Seção da vaga"),
+                ` ${REASON_LABELS[item.reason] || ""}`);
+            entry.append(text, reason);
+            list.append(entry);
+        }
+        section.append(list);
+    }
+
+    if (unknownTerms.length > 0) {
+        const label = document.createElement("p");
+        label.className = "hint";
+        label.textContent = "Nomes que o dicionário não conhece:";
+        const terms = document.createElement("ul");
+        terms.className = "parts";
+        for (const term of unknownTerms) {
+            const chip = document.createElement("li");
+            chip.className = "chip";
+            chip.textContent = term;
+            terms.append(chip);
+        }
+        section.append(label, terms);
+    }
+    return section;
 }
 
 /**
@@ -363,9 +473,23 @@ function report(data) {
         }
         lines.push(`${group.title} (${items.length})`);
         for (const item of items) {
-            lines.push(item.evidence ? `- ${item.name}: "${item.evidence}"` : `- ${item.name}`);
+            const name = item.priority === "PREFERRED" ? `${item.name} (diferencial)` : item.name;
+            lines.push(item.evidence ? `- ${name}: "${item.evidence}"` : `- ${name}`);
+            for (const component of item.components || []) {
+                lines.push(`    ${STATUS_MARKS[component.status] || ""} ${component.name}`);
+            }
         }
         lines.push("");
+    }
+    if (data.unevaluated.length > 0) {
+        lines.push(`Não avaliado pelo programa (${data.unevaluated.length})`);
+        for (const item of data.unevaluated) {
+            lines.push(`- ${item.text} [${REASON_LABELS[item.reason] || ""}]`);
+        }
+        lines.push("");
+    }
+    if (data.unknownTerms.length > 0) {
+        lines.push(`Nomes que o dicionário não conhece: ${data.unknownTerms.join(", ")}`, "");
     }
     lines.push(data.summary);
     return lines.join("\n");
