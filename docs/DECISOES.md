@@ -326,6 +326,7 @@ Famílias iniciais, pequenas de propósito:
 nuvem             Azure, AWS, GCP
 banco relacional  PostgreSQL, MySQL, SQL Server, Oracle
 hospedagem de Git GitHub, GitLab
+build Java        Maven, Gradle
 chamados          Jira, Zendesk, GLPI, ServiceNow
 shell             PowerShell, Bash, Shell Script
 suíte de escritório Google Workspace, Office 365
@@ -617,12 +618,23 @@ lista de requisitos com a mudança aplicada. Não existe segunda fórmula.
 ```
 A  PARTIAL                          -> MATCH  "Se você usou X em algum projeto..."
 B  MISSING com indício no currículo -> MATCH  "Seu currículo tem X. Se você trabalha com Y..."
-C  MISSING sem indício              -> fora da conta, "Lacuna real"
+C  MISSING sem indício              -> fora da conta, "Sem indício no currículo"
 ```
+
+C não se chama "lacuna real" porque não é certeza: a extração ainda separa
+alternativas que deviam ser um requisito só (L24). Antes da família
+{Maven, Gradle}, "Maven ou Gradle" virava dois obrigatórios, e quem tinha
+Maven via Gradle em C.
 
 Pontos de cada sugestão = cobertura com só aquela mudança menos a cobertura
 real, arredondada em uma casa. "Fazendo todas" aplica todas juntas na mesma
 cópia. As sugestões aparecem da que dá mais pontos para a que dá menos.
+
+Como cada número já vem arredondado, a cobertura real mais a soma das
+sugestões pode diferir do total em alguns décimos (29,4 + 11,8 + 11,8 + 5,9 +
+5,9 + 5,9 = 70,7, e o total é 70,6). A conta não muda: o total vem do
+`ScoreCalculator` aplicado a todas as mudanças juntas. A tela e o "Copiar
+resultado" avisam que os valores são arredondados.
 
 Indícios são de mão única e ficam numa tabela à parte (`ImprovementHints`),
 consultada pelo requisito que falta:

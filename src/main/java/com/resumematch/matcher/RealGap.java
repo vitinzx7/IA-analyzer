@@ -3,7 +3,7 @@ package com.resumematch.matcher;
 import java.util.List;
 
 /**
- * Requisito que nenhuma reescrita resolve: falta evidencia e nenhum indicio.
+ * Requisito sem evidencia e sem indicio no curriculo; fica fora da simulacao.
  *
  * @param missingParts partes sem evidencia, quando o requisito e um conjunto;
  *        vazia nos demais

@@ -74,6 +74,18 @@ class AnalysisServiceTest {
     }
 
     @Test
+    void mavenOuGradleViraAlternativaENaoLacuna() {
+        AnalysisResult result = service.analyze(
+                "Tecnologias: Maven.",
+                "Requisitos:\n- Maven ou Gradle.");
+
+        assertThat(result.requirements()).extracting(r -> r.name()).containsExactly("Maven / Gradle");
+        assertThat(result.improvement().gaps()).isEmpty();
+        assertThat(result.improvement().suggestions()).extracting(s -> s.requirement())
+                .containsExactly("Maven / Gradle");
+    }
+
+    @Test
     void grupoDeAlternativasValeUmRequisitoNoScore() {
         AnalysisResult result = service.analyze(
                 "Desenvolvi e publiquei no Azure Container Apps.",

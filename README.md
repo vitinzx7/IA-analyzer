@@ -199,10 +199,14 @@ sempre condicional.
   "Seu currículo tem Java. Se você trabalha com Back-end, cite Back-end numa
   frase de ação." Os indícios são de mão única: Java indica Back-end, mas
   Back-end não indica Java.
-- **Lacuna real:** falta, e nada no currículo sugere. Não dá pontos.
+- **Sem indício no currículo:** falta, e nenhum termo do currículo sugere.
+  Não dá pontos. Não é certeza de lacuna: a vaga pode aceitar uma alternativa
+  que o programa separou em outro requisito.
 
 Os pontos saem da mesma conta da cobertura, aplicada numa cópia dos
-requisitos com a mudança. Na API:
+requisitos com a mudança. Como cada número vem arredondado em uma casa, a
+soma das sugestões pode diferir do total "fazendo todas" em alguns décimos.
+Na API:
 
 ```json
 "improvement": {

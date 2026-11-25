@@ -131,6 +131,36 @@ class ImprovementSimulatorTest {
         assertThat(simulation.gaps()).extracting(RealGap::requirement).containsExactly("AWS");
     }
 
+    /**
+     * 7 obrigatorios, 3 so em lista: real 1,5/7 = 21,4; cada mudanca 2/7 = 28,6
+     * (+7,2); todas 3/7 = 42,9. A soma das partes da 43,0, e o total continua
+     * vindo do ScoreCalculator aplicado a todas as mudancas juntas.
+     */
+    @Test
+    void totalVemDaContaComTodasAsMudancasENaoDaSomaArredondada() {
+        String resume = "Tecnologias: React, Docker, Python.";
+        List<RequirementMatch> matches = match(resume,
+                required("React"), required("Docker"), required("Python"), required("AWS"),
+                required("Kubernetes"), required("Terraform"), required("Jenkins"));
+        double realScore = calculator.calculate(matches);
+
+        ImprovementSimulation simulation = simulate(resume, matches);
+
+        List<RequirementMatch> allChanges = matches.stream()
+                .map(m -> m.status() == MatchStatus.PARTIAL
+                        ? new RequirementMatch(m.name(), MatchStatus.MATCH, m.evidence(), m.priority())
+                        : m)
+                .toList();
+        double sumOfParts = realScore + simulation.suggestions().stream()
+                .mapToDouble(ImprovementSuggestion::points).sum();
+        assertThat(realScore).isEqualTo(21.4);
+        assertThat(simulation.suggestions()).extracting(ImprovementSuggestion::points)
+                .containsExactly(7.2, 7.2, 7.2);
+        assertThat(simulation.scoreWithAll()).isEqualTo(42.9)
+                .isEqualTo(calculator.calculate(allChanges));
+        assertThat(Math.round(sumOfParts * 10) / 10.0).isEqualTo(43.0);
+    }
+
     @Test
     void diferencialDaMetadeDosPontos() {
         String resume = "Tecnologias: React.\nDesenvolvi uma API em Java.";

@@ -359,9 +359,37 @@ Front-end, diferencial, que vem de "Noções de front-end com JS ou React". A
 cobertura dessa vaga muda para o mesmo currículo. O título já gerava Java do
 mesmo jeito antes deste bloco.
 
+As responsabilidades também geram os dois. "Atuar no desenvolvimento tanto do
+Front-end quanto do Back-end" vira Front-end e Back-end, ambos obrigatórios
+(conferido com o extrator). Na revisão do bloco, com uma vaga real que não
+está no repositório, a cobertura do mesmo currículo caiu de 62,5 para 56,3.
+
 A tabela de indícios também é pequena: só cobre Git, Back-end e Front-end. Um
-requisito ausente fora dela sempre cai em "Lacuna real", mesmo quando o
-currículo tem algo próximo.
+requisito ausente fora dela sempre cai em "Sem indício no currículo", mesmo
+quando o currículo tem algo próximo.
+
+---
+
+## L24 — Uma linha da vaga pode virar vários requisitos · ABERTA
+
+Termos de famílias diferentes na mesma linha viram requisitos separados, e
+cada um pesa sozinho:
+
+```
+"Noções de front-end com JS ou React." (diferencial)
+  -> Front-end, JavaScript, React: três diferenciais, peso 1,5 em vez de 0,5
+"Noções de redes (TCP/IP, DNS, DHCP)" (obrigatório)
+  -> Redes de Computadores e o conjunto TCP/IP + DNS + DHCP: dois obrigatórios
+```
+
+"JS ou React" não vira alternativa porque JavaScript e React não são da mesma
+família (D11). O Front-end entrou com a D21; a divisão de "JS ou React" e o
+"Redes de Computadores" em dobro já existiam. Na simulação de melhora, a mesma
+linha pode aparecer repetida em "Sem indício no currículo": no teste da tela,
+"Redes de Computadores" e "TCP/IP · DNS · DHCP" apareceram lado a lado.
+
+Antes da família {Maven, Gradle}, "Maven ou Gradle" também virava dois
+obrigatórios. A causa é a mesma: só agrupa o que a lista de famílias conhece.
 
 ---
 
