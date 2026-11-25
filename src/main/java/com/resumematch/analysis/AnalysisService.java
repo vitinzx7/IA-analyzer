@@ -13,6 +13,8 @@ import com.resumematch.matcher.ScoreCalculator;
 import com.resumematch.matcher.Sentence;
 import com.resumematch.matcher.SentenceSplitter;
 import com.resumematch.matcher.SummaryGenerator;
+import com.resumematch.pdf.HiddenTextReport;
+import com.resumematch.pdf.PdfText;
 import com.resumematch.pdf.PdfTextExtractor;
 
 /**
@@ -58,22 +60,41 @@ public final class AnalysisService {
     }
 
     public AnalysisResult analyze(String resumeText, String jobText) {
+        return analyze(resumeText, jobText, null);
+    }
+
+    public AnalysisResult analyzePdf(InputStream pdf, String origin, String jobText) {
+        PdfText resume = pdfTextExtractor.extractChecked(pdf, origin);
+        return analyze(resume.text(), jobText, resume.report());
+    }
+
+    private AnalysisResult analyze(String resumeText, String jobText, HiddenTextReport pdfCheck) {
         validate(resumeText, jobText);
 
         List<Sentence> sentences = sentenceSplitter.split(resumeText);
         JobExtraction job = requirementExtractor.read(jobText);
         List<RequirementMatch> matches = matcher.matchRequirements(job.requirements(), resumeText, sentences);
         double score = scoreCalculator.calculate(matches);
-        String summary = summaryGenerator.generate(matches, score, job);
+        String summary = summaryGenerator.generate(matches, score, job) + hiddenTextNote(pdfCheck);
         AnalysisResult result = new AnalysisResult(matches.isEmpty() ? null : score, matches, summary,
-                ProfileEvidence.attach(job.unevaluated(), resumeText, sentences), job.unknownTerms());
+                ProfileEvidence.attach(job.unevaluated(), resumeText, sentences), job.unknownTerms(),
+                pdfCheck);
         analysisLog.log(result);
         return result;
     }
 
-    public AnalysisResult analyzePdf(InputStream pdf, String origin, String jobText) {
-        String resumeText = pdfTextExtractor.extract(pdf, origin);
-        return analyze(resumeText, jobText);
+    /** Frase sobre texto escondido no PDF, ou vazio. */
+    private static String hiddenTextNote(HiddenTextReport pdfCheck) {
+        if (pdfCheck == null) {
+            return "";
+        }
+        if (pdfCheck.removedHiddenText()) {
+            return " O PDF tinha texto invisivel, que ficou fora da analise.";
+        }
+        if (pdfCheck.hasSuspiciousText()) {
+            return " O PDF tem texto branco, minusculo ou fora da pagina; confira o aviso.";
+        }
+        return "";
     }
 
     private void validate(String resumeText, String jobText) {

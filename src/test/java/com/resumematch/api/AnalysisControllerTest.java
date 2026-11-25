@@ -46,7 +46,9 @@ class AnalysisControllerTest {
                 .andExpect(jsonPath("$.requirements[0].name").value("Java"))
                 .andExpect(jsonPath("$.requirements[0].status").value("MATCH"))
                 .andExpect(jsonPath("$.requirements[2].status").value("MISSING"))
-                .andExpect(jsonPath("$.summary").isNotEmpty());
+                .andExpect(jsonPath("$.summary").isNotEmpty())
+                .andExpect(jsonPath("$.pdfCheck.invisibleChars").value(0))
+                .andExpect(jsonPath("$.pdfCheck.scannedLayer").value(false));
     }
 
     @Test

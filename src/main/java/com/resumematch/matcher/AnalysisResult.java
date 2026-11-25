@@ -2,6 +2,8 @@ package com.resumematch.matcher;
 
 import java.util.List;
 
+import com.resumematch.pdf.HiddenTextReport;
+
 /**
  * Resultado da analise.
  *
@@ -10,14 +12,21 @@ import java.util.List;
  * @param unevaluated trechos de requisito da vaga que ficaram fora do calculo
  * @param unknownTerms nomes da vaga que parecem tecnologia mas o dicionario
  *        nao conhece
+ * @param pdfCheck texto escondido achado no PDF; null quando o curriculo veio
+ *        como texto colado
  */
 public record AnalysisResult(Double score, List<RequirementMatch> requirements, String summary,
-        List<UnevaluatedItem> unevaluated, List<String> unknownTerms) {
+        List<UnevaluatedItem> unevaluated, List<String> unknownTerms, HiddenTextReport pdfCheck) {
 
     public AnalysisResult {
         requirements = List.copyOf(requirements);
         unevaluated = unevaluated == null ? List.of() : List.copyOf(unevaluated);
         unknownTerms = unknownTerms == null ? List.of() : List.copyOf(unknownTerms);
+    }
+
+    public AnalysisResult(Double score, List<RequirementMatch> requirements, String summary,
+            List<UnevaluatedItem> unevaluated, List<String> unknownTerms) {
+        this(score, requirements, summary, unevaluated, unknownTerms, null);
     }
 
     public AnalysisResult(Double score, List<RequirementMatch> requirements, String summary) {

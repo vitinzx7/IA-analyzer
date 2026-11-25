@@ -7,30 +7,53 @@ import java.io.InputStream;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 
+/**
+ * Extrai o texto do curriculo e confere se ha texto que uma pessoa nao ve.
+ *
+ * Texto em modo invisivel ou transparente fica fora da analise: e o jeito de
+ * esconder palavras-chave num PDF. A excecao e o PDF escaneado com camada de
+ * texto (OCR), em que quase todo o texto e invisivel por cima da imagem; ali
+ * nada e tirado. Texto branco, minusculo ou fora da pagina entra na analise e
+ * so gera aviso, porque pode ser legitimo.
+ */
 public class PdfTextExtractor {
 
     static final int MIN_CHARS = 200;
 
+    /** Fracao de texto invisivel a partir da qual o PDF e tratado como escaneado. */
+    static final double SCANNED_LAYER = 0.9;
+
     public String extract(File file) {
         try (PDDocument document = Loader.loadPDF(file)) {
-            return readText(document, file.getName());
+            return read(document, file.getName()).text();
         } catch (IOException e) {
             throw new PdfExtractionException("Nao foi possivel abrir o PDF: " + file.getName(), e);
         }
     }
 
     public String extract(InputStream input, String origin) {
+        return extractChecked(input, origin).text();
+    }
+
+    public PdfText extractChecked(InputStream input, String origin) {
         try (PDDocument document = Loader.loadPDF(new RandomAccessReadBuffer(input))) {
-            return readText(document, origin);
+            return read(document, origin);
         } catch (IOException e) {
             throw new PdfExtractionException("Nao foi possivel abrir o PDF: " + origin, e);
         }
     }
 
-    private String readText(PDDocument document, String origin) throws IOException {
-        String text = new PDFTextStripper().getText(document).strip();
+    private PdfText read(PDDocument document, String origin) throws IOException {
+        VisibilityTextStripper all = new VisibilityTextStripper(false);
+        String text = all.getText(document).strip();
+        int total = all.visibleChars() + all.invisibleChars();
+        boolean scanned = total > 0 && all.invisibleChars() >= SCANNED_LAYER * total;
+
+        HiddenTextReport report = all.report(scanned);
+        if (all.invisibleChars() > 0 && !scanned) {
+            text = new VisibilityTextStripper(true).getText(document).strip();
+        }
         if (text.length() < MIN_CHARS) {
             throw new PdfExtractionException(
                     "Texto extraido de " + origin + " tem apenas " + text.length()
@@ -38,6 +61,6 @@ public class PdfTextExtractor {
                             + ". O arquivo pode ser digitalizado ou conter apenas imagens."
                             + " A analise foi interrompida para nao gerar um score falso.");
         }
-        return text;
+        return new PdfText(text, report);
     }
 }

@@ -15,6 +15,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import org.junit.jupiter.api.Test;
 
 import com.resumematch.dictionary.TechnologyDictionary;
@@ -121,6 +122,22 @@ class AnalysisServiceTest {
     }
 
     @Test
+    void palavraEscondidaNoPdfNaoViraEvidencia() throws IOException {
+        AnalysisResult result = service.analyzePdf(pdfWithHiddenLine(
+                "Kubernetes AWS Terraform Kubernetes AWS"), "curriculo.pdf", "Java, AWS");
+
+        assertThat(result.requirements()).extracting(r -> r.status())
+                .containsExactly(MatchStatus.MATCH, MatchStatus.MISSING);
+        assertThat(result.pdfCheck().removedHiddenText()).isTrue();
+        assertThat(result.summary()).contains("texto invisivel, que ficou fora da analise");
+    }
+
+    @Test
+    void analiseDeTextoColadoNaoTemConferenciaDePdf() {
+        assertThat(service.analyze("Desenvolvi uma API em Java.", "Java").pdfCheck()).isNull();
+    }
+
+    @Test
     void rejeitaCurriculoVazio() {
         assertThatThrownBy(() -> service.analyze("", "Java"))
                 .isInstanceOf(AnalysisException.class)
@@ -173,6 +190,38 @@ class AnalysisServiceTest {
         assertThat(result.score()).isNull();
         assertThat(result.requirements()).isEmpty();
         assertThat(result.summary()).contains("Nenhum requisito reconhecido");
+    }
+
+    private InputStream pdfWithHiddenLine(String hidden) throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            PDPage page = new PDPage();
+            document.addPage(page);
+            PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            try (PDPageContentStream stream = new PDPageContentStream(document, page)) {
+                float y = 700;
+                for (String line : List.of(
+                        "Desenvolvi uma API em Java com Spring Boot e PostgreSQL.",
+                        "Configurei o ambiente e escrevi os testes automatizados.",
+                        "Mantive a documentacao atualizada durante o desenvolvimento.",
+                        "Apoiei usuarios no suporte tecnico e documentei as solucoes.")) {
+                    stream.beginText();
+                    stream.setFont(font, 12);
+                    stream.newLineAtOffset(50, y);
+                    stream.showText(line);
+                    stream.endText();
+                    y -= 20;
+                }
+                stream.beginText();
+                stream.setRenderingMode(RenderingMode.NEITHER);
+                stream.setFont(font, 12);
+                stream.newLineAtOffset(50, y);
+                stream.showText(hidden);
+                stream.endText();
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            document.save(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        }
     }
 
     private InputStream pdf(String content) throws IOException {
