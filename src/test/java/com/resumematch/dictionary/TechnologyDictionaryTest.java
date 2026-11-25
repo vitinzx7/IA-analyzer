@@ -156,6 +156,12 @@ class TechnologyDictionaryTest {
     }
 
     @Test
+    void reconheceBackEndEFrontEndComOuSemHifen() {
+        assertThat(technologiesIn("backend, back end, Back-end; frontend, front end, Front-End"))
+                .containsExactly("Back-end", "Back-end", "Back-end", "Front-end", "Front-end", "Front-end");
+    }
+
+    @Test
     void distribuicaoLinuxEhUmTermoSo() {
         assertThat(technologiesIn("Laboratorio com Kali Linux e Ubuntu")).containsExactly("Kali Linux", "Ubuntu");
     }

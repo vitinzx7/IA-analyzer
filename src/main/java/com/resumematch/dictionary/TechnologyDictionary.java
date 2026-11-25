@@ -151,6 +151,8 @@ public class TechnologyDictionary {
         map.put("React", List.of("reactjs"));
         map.put("Node.js", List.of("nodejs"));
         map.put("API REST", List.of("apis rest", "rest api", "restful", "api restful"));
+        map.put("Back-end", List.of("backend", "back end"));
+        map.put("Front-end", List.of("frontend", "front end"));
 
         map.put("PostgreSQL", List.of("postgres"));
         map.put("MySQL", List.of());
