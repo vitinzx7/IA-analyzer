@@ -3,7 +3,7 @@
 Problemas identificados e **não** resolvidos, com o motivo de não terem sido
 resolvidos. Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: evidência por seção, negação "sem experiência em", formação e idioma.
+Última atualização: texto escondido no PDF.
 
 Estado: `ABERTA` (não tratada) · `MITIGADA` (tratada em parte) ·
 `RESOLVIDA` (com o bloco que resolveu).
@@ -329,6 +329,24 @@ inicial, também deixa de se juntar à linha seguinte.
 A D18 só mostra uma frase do currículo que parece responder. "Cursando
 Ciência da Computação" na vaga e "Tecnólogo em Gastronomia" no currículo são
 tratados igual, e "Inglês avançado" é respondido por "Inglês básico".
+
+---
+
+## L22 — Texto escondido de outras formas não é pego · ABERTA
+
+A D20 olha o modo de desenho, a transparência, a cor, o tamanho e a posição de
+cada letra. Não pega:
+
+```
+texto coberto por um retângulo ou uma imagem desenhados por cima
+texto branco sobre fundo branco desenhado (o aviso não diferencia do texto
+branco sobre fundo escuro, que é legítimo)
+texto em cor quase igual à do fundo, mas não branca
+texto em cor de espaço de cor que o PDFBox não converte para RGB
+```
+
+Um PDF escaneado em que menos de 90% do texto seja invisível (por exemplo,
+camada de OCR mais um rodapé digital) tem a camada de OCR tirada da análise.
 
 ---
 

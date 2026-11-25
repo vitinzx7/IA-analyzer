@@ -164,6 +164,24 @@ resumematch.csv.enabled=false
 resumematch.csv.path=/caminho/analises.csv
 ```
 
+## Texto escondido no PDF
+
+Ao ler o PDF, o programa olha como cada letra é desenhada (D20). Texto em modo
+invisível ou totalmente transparente fica **fora** da análise, porque é o jeito
+de esconder palavras-chave. Texto branco, em fonte menor que 4 pt ou fora da
+página entra, mas gera aviso na tela: pode ser legítimo, como letra branca
+sobre um cabeçalho escuro. Um PDF escaneado com camada de texto (OCR) não
+perde nada. A API manda o resultado em `pdfCheck`:
+
+```json
+"pdfCheck": {
+  "invisibleChars": 33, "whiteChars": 0, "tinyChars": 0, "outsideChars": 0,
+  "scannedLayer": false,
+  "invisibleSample": "Kubernetes Terraform AWS Splunk Wazuh",
+  "suspiciousSample": ""
+}
+```
+
 ## Medir o acerto
 
 Cada requisito do resultado tem os botões "Certo" e "Devia ser …". Cada

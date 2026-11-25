@@ -567,6 +567,41 @@ API continua `score`, para não quebrar quem já usa.
 
 ---
 
+## D20 — Texto escondido no PDF
+
+Implementado em `VisibilityTextStripper`, `PdfTextExtractor`,
+`HiddenTextReport` e `app.js`.
+
+Problema real: palavras-chave em texto invisível ou branco são um truque
+conhecido para enganar triagem automática. Um PDF com "Kubernetes Terraform
+AWS" escondido ganhava pontos por termos que ninguém lê.
+
+Regra, olhando cada letra durante a extração:
+
+```
+modo de desenho invisível (NEITHER)   -> fica fora da análise, aviso
+transparência total (alpha < 0,05)    -> fica fora da análise, aviso
+cor branca (R, G e B >= 242)          -> entra na análise, aviso
+fonte menor que 4 pt                  -> entra na análise, aviso
+posição fora da página                -> entra na análise, aviso
+```
+
+Branco, minúsculo e fora da página só geram aviso porque podem ser legítimos:
+letra branca sobre um cabeçalho escuro é comum em modelos de currículo, e um
+PDF gerado com linha mais larga que a página não esconde nada de propósito.
+Invisível e transparente não têm uso legítimo em currículo digital, com uma
+exceção: o PDF escaneado com camada de texto (OCR) tem todo o texto invisível
+por cima da imagem. Por isso, quando 90% ou mais do texto é invisível, nada é
+tirado e a tela avisa que o PDF parece escaneado.
+
+O extrator padrão do PDFBox não acompanha a cor; os operadores de cor são
+registrados no `VisibilityTextStripper`. O aviso só aparece a partir de 10
+caracteres sem espaço em cada caso, para não reagir a ruído do PDF. A API
+manda as contagens e o começo de cada trecho em `pdfCheck`; a análise de
+texto colado manda `null`.
+
+---
+
 ## Observações do texto real (Bloco 1)
 
 Extraídas de um único currículo real, 3050 caracteres, coluna única. Sustentam
