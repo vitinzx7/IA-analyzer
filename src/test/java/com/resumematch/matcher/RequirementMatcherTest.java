@@ -315,6 +315,24 @@ class RequirementMatcherTest {
     }
 
     @Test
+    void semExperienciaOuSemConhecimentoAntesDoTermoNega() {
+        assertThat(match("Desenvolvi APIs, mas sem experiência em Java.", "Java").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+        assertThat(match("Não tenho conhecimento em Docker.", "Docker").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+        assertThat(match("Sem experiência prévia com o Kubernetes.", "Kubernetes").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+    }
+
+    @Test
+    void semSeguidoDeOutraPalavraNaoNegaOTermo() {
+        assertThat(match("Desenvolvi sem ajuda a API Java.", "Java").getFirst().status())
+                .isEqualTo(MatchStatus.MATCH);
+        assertThat(match("Tenho experiência em Java.", "Java").getFirst().status())
+                .isEqualTo(MatchStatus.PARTIAL);
+    }
+
+    @Test
     void mencaoNegadaNaoApagaOutraMencaoValida() {
         RequirementMatch result = match(
                 "Tecnologias: Docker.\nDesenvolvi sistemas sem Docker.", "Docker").getFirst();
