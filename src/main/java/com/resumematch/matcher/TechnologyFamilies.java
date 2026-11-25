@@ -18,6 +18,7 @@ public final class TechnologyFamilies {
             Set.of("Azure", "AWS", "GCP"),
             Set.of("PostgreSQL", "MySQL", "SQL Server", "Oracle"),
             Set.of("GitHub", "GitLab"),
+            Set.of("Maven", "Gradle"),
             Set.of("Jira", "Zendesk", "GLPI", "ServiceNow"),
             Set.of("PowerShell", "Bash", "Shell Script"),
             Set.of("Google Workspace", "Office 365"),
