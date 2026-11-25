@@ -114,9 +114,34 @@ class SentenceSplitterTest {
     @Test
     void linhaDeContatoNaoSeJuntaComOutras() {
         assertThat(sentences("Victor Douglas\nEstudante de TI | Redes\nvictor@email.com"))
-                .containsExactly("Victor Douglas Estudante de TI | Redes", "victor@email.com");
+                .containsExactly("Victor Douglas", "Estudante de TI | Redes", "victor@email.com");
         assertThat(sentences("Victor Douglas\n(61) 99999-9999\nBrasilia"))
                 .containsExactly("Victor Douglas", "(61) 99999-9999", "Brasilia");
+    }
+
+    @Test
+    void juntaContinuacaoDepoisDeUmaLinhaEmBranco() {
+        assertThat(sentences("• Publiquei a aplicacao com containers Docker\n\nno Azure Container Apps.\n"
+                + "• Configurei o ambiente."))
+                .containsExactly("Publiquei a aplicacao com containers Docker no Azure Container Apps.",
+                        "Configurei o ambiente.");
+    }
+
+    @Test
+    void linhaEmBrancoAntesDeMaiusculaOuDuasLinhasEmBrancoSeparam() {
+        assertThat(sentences("Primeiro paragrafo sem ponto\n\nSegundo paragrafo"))
+                .containsExactly("Primeiro paragrafo sem ponto", "Segundo paragrafo");
+        assertThat(sentences("Primeiro paragrafo sem ponto\n\n\ncontinua depois de duas"))
+                .containsExactly("Primeiro paragrafo sem ponto", "continua depois de duas");
+    }
+
+    @Test
+    void nomeDePessoaNaoSeJuntaAoTitulo() {
+        assertThat(sentences("Victor Douglas Sant'Anna Dideus\nEstudante de TI | Suporte Técnico, Infraestrutura e Redes"))
+                .containsExactly("Victor Douglas Sant'Anna Dideus",
+                        "Estudante de TI | Suporte Técnico, Infraestrutura e Redes");
+        assertThat(sentences("Desenvolvi uma API em\nJava com Spring Boot."))
+                .containsExactly("Desenvolvi uma API em Java com Spring Boot.");
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.resumematch.matcher;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Divide o texto do curriculo em frases.
@@ -14,6 +15,8 @@ import java.util.List;
 public final class SentenceSplitter {
 
     private static final String BULLETS = "•-*–—▪◦·●○■□";
+    private static final Set<String> NAME_CONNECTORS =
+            Set.of("de", "da", "do", "dos", "das", "e");
 
     public List<Sentence> split(String text) {
         if (text == null || text.isBlank()) {
@@ -49,25 +52,60 @@ public final class SentenceSplitter {
         return result;
     }
 
+    /**
+     * Uma linha em branco separa paragrafos, exceto quando e uma so e a linha
+     * seguinte comeca com minuscula: alguns leitores de PDF poem uma linha em
+     * branco no meio da frase ("containers Docker" / "" / "no Azure").
+     */
     private List<List<Line>> paragraphs(List<Line> lines) {
         List<List<Line>> result = new ArrayList<>();
         List<Line> current = new ArrayList<>();
+        int blanks = 0;
         for (Line line : lines) {
             if (line.text().isBlank()) {
-                flush(current, result);
+                blanks++;
                 continue;
             }
-            if (current.isEmpty()) {
-                current.add(line);
-            } else if (shouldJoin(current.get(current.size() - 1), line)) {
-                current.add(line);
-            } else {
+            Line last = current.isEmpty() ? null : current.get(current.size() - 1);
+            boolean join = last != null && (blanks == 0
+                    ? shouldJoin(last, line)
+                    : blanks == 1 && shouldJoin(last, line) && startsLowerCase(line.text()));
+            if (!join) {
                 flush(current, result);
-                current.add(line);
             }
+            current.add(line);
+            blanks = 0;
         }
         flush(current, result);
         return result;
+    }
+
+    private boolean startsLowerCase(String line) {
+        String strip = line.strip();
+        return !strip.isEmpty() && Character.isLowerCase(strip.codePointAt(0));
+    }
+
+    /**
+     * Linha com cara de nome de pessoa: de duas a seis palavras, so letras,
+     * todas com inicial maiuscula, exceto "de", "da", "do", "dos", "das" e "e".
+     * Ela nao se junta a linha seguinte, para o nome nao virar evidencia junto
+     * com o titulo.
+     */
+    private boolean isNameLike(String line) {
+        String[] words = line.strip().split("\\s+");
+        if (words.length < 2 || words.length > 6) {
+            return false;
+        }
+        for (String word : words) {
+            if (NAME_CONNECTORS.contains(word)) {
+                continue;
+            }
+            if (!word.chars().allMatch(c -> Character.isLetter(c) || c == '\'' || c == '’' || c == '-')
+                    || !Character.isUpperCase(word.codePointAt(0))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void flush(List<Line> current, List<List<Line>> result) {
@@ -89,7 +127,7 @@ public final class SentenceSplitter {
         if (PersonalData.isContactLine(c) || PersonalData.isContactLine(n)) {
             return false;
         }
-        return !isHeader(c) && !isHeader(n);
+        return !isHeader(c) && !isHeader(n) && !isNameLike(c);
     }
 
     private boolean endsSentence(String line) {
