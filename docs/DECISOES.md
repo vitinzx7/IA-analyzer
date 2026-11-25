@@ -114,6 +114,17 @@ telefone com DDD ou um link (`http`, `www`, `github.com`, `linkedin.com`). Um
 `@` solto, como `@RestController`, ou um `|` não fazem a linha virar contato:
 as duas coisas aparecem em frases de projeto que quebram de linha.
 
+**Uma linha em branco sozinha não corta a frase** quando a linha seguinte
+começa com minúscula. Alguns leitores de PDF põem uma linha vazia no meio da
+frase ("containers Docker" / "" / "no Azure Container Apps."), e o verbo
+ficava longe da tecnologia. Duas linhas em branco, ou a seguinte com
+maiúscula, continuam separando parágrafos.
+
+**Linha com cara de nome não se junta à seguinte**: duas a seis palavras, só
+letras, todas com inicial maiúscula (fora "de", "da", "do", "dos", "das" e
+"e"). Sem isso, "Victor Douglas Sant'Anna Dideus" grudava em "Estudante de TI
+| ... Redes" e o nome virava evidência de "Redes de Computadores".
+
 **Passada 2, separar frases** sobre o texto já remontado, por `.`, `!`, `?` e
 `;`, tratando cada item de bullet como frase própria mesmo sem pontuação final.
 
@@ -500,6 +511,59 @@ API recusa a marcação com uma mensagem em vez de fingir que gravou.
 É isso que permite calibrar os pesos da D13 e medir se uma mudança de regra
 melhora ou piora: marcar um conjunto de análises, mudar a regra, analisar de
 novo e comparar.
+
+---
+
+## D17 — Evidência escolhida pela seção do currículo
+
+Implementado em `ResumeSections`, `ResumeSection` e `RequirementMatcher`.
+
+Problema real: a evidência de "Redes de Computadores" era o nome da pessoa
+colado no título do currículo, porque era a primeira menção do texto.
+
+Regra: os títulos de seção do currículo ("RESUMO", "COMPETÊNCIAS TÉCNICAS",
+"PROJETOS", "EXPERIÊNCIA PROFISSIONAL", "FORMAÇÃO ACADÊMICA", "CURSOS
+COMPLEMENTARES", "IDIOMAS") dividem o texto. O que vem antes do primeiro
+título é o cabeçalho. Entre as menções válidas de um requisito:
+
+```
+1. frase com verbo de ação vence frase sem verbo (o status segue a D1)
+2. entre iguais, vence a seção mais forte:
+   experiência, projetos  >  cursos, formação  >  outra  >  competências,
+   idiomas  >  resumo  >  cabeçalho
+3. no empate, a primeira
+```
+
+O status não muda por causa da seção: só a evidência mostrada. A API manda a
+seção em `evidenceSection`. Currículo sem nenhum título reconhecido fica todo
+em `OTHER` e a escolha volta a ser a da primeira menção.
+
+---
+
+## D18 — Formação e idioma procurados no currículo, fora do score
+
+Implementado em `ProfileEvidence`.
+
+Os trechos de formação e idioma da vaga (D15) continuam fora do score, mas o
+programa procura no currículo uma frase que pareça responder: curso superior
+("Tecnólogo", "Bacharelado", "Graduação", "Universidade", "Cursando"), de
+preferência na seção de formação; ou o mesmo idioma citado na vaga, de
+preferência na seção de idiomas. A tela mostra "No currículo: ..." ou "Não
+encontrei isso no currículo". Não compara área do curso nem nível do idioma.
+
+---
+
+## D19 — O número se chama cobertura técnica
+
+Implementado em `index.html`, `app.js` e `LocalSummaryGenerator`.
+
+O número mede quanto dos requisitos técnicos reconhecidos o currículo
+comprova. Comparado com notas dadas por opinião, ele foi lido como "nota do
+candidato", o que não é. A tela passou a chamá-lo de "Cobertura técnica da
+vaga", o resumo diz "Cobertura tecnica X/100" e o aviso final diz que ele não
+é nota do candidato nem probabilidade de contratação. A tela também mostra
+quantos obrigatórios têm alguma evidência e quais não têm nenhuma. O campo da
+API continua `score`, para não quebrar quem já usa.
 
 ---
 

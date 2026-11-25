@@ -128,6 +128,17 @@ score = Σ (peso × pontos) / Σ peso × 100
 O resultado é arredondado para uma casa decimal. Vaga sem nenhum requisito
 reconhecido não tem nota: a API devolve `"score": null` e o resumo explica.
 
+Na tela, o número se chama **cobertura técnica da vaga** (D19): ele diz quanto
+dos requisitos técnicos reconhecidos o currículo comprova, e não é nota do
+candidato. A tela também lista os obrigatórios sem nenhuma evidência.
+
+Quando um termo aparece em mais de um lugar do currículo, a evidência mostrada
+vem da seção mais forte (D17): experiência e projetos, depois cursos e
+formação, depois competências, resumo e, por último, o cabeçalho. A API manda
+a seção em `evidenceSection`. Formação e idioma pedidos pela vaga não entram
+no cálculo, mas a tela mostra o trecho do currículo que parece responder
+(`resumeEvidence`, D18).
+
 O resumo é gerado localmente com frases condicionais. O sistema não sabe o que a
 pessoa realmente viveu, então nunca manda inventar experiência: quando sugere
 algo, escreve "se você realmente tem experiência com X, considere deixar isso

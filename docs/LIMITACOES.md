@@ -3,7 +3,7 @@
 Problemas identificados e **não** resolvidos, com o motivo de não terem sido
 resolvidos. Cada relatório de bloco aponta para cá em vez de repetir esta lista.
 
-Última atualização: seções da vaga, conjuntos e itens não avaliados.
+Última atualização: evidência por seção, negação "sem experiência em", formação e idioma.
 
 Estado: `ABERTA` (não tratada) · `MITIGADA` (tratada em parte) ·
 `RESOLVIDA` (com o bloco que resolveu).
@@ -240,26 +240,32 @@ perder o verbo:
    -> "Java." fica sozinha
 ```
 
+Desde a D2 atual, uma linha com cara de nome não se junta ao título, então o
+nome deixou de aparecer colado na evidência do título. Ele ainda aparece se a
+frase usada como evidência citar o nome.
+
 **Por que não foi tratada:** o pedido cobria e-mail e telefone. CPF e nome
 exigem regra própria, e a exceção para bullets com link ainda não tem caso real
 no CSV.
 
 ---
 
-## L14 — Negação só é reconhecida em duas formas · ABERTA
+## L14 — Negação só é reconhecida em três formas · MITIGADA
 
-A negação do termo (D1) só pega a negação logo antes do termo ("sem Docker") e
-a oração em que todos os verbos da lista estão negados ("Nunca utilizei AWS").
-Casos que **não** são pegos:
+A negação do termo (D1) pega a negação logo antes do termo ("sem Docker"), a
+oração em que todos os verbos da lista estão negados ("Nunca utilizei AWS") e,
+desde o bloco de evidência, "sem" ou "não tenho" seguido de experiência,
+conhecimento, vivência ou contato logo antes do termo ("sem experiência em
+Java", "não tenho conhecimento em Docker"). Não é uma janela livre de
+palavras: "Desenvolvi sem ajuda a API Java" continua MATCH. Casos que
+**não** são pegos:
 
 ```
-"Desenvolvi o front, sem experiência em Java."  -> Java MATCH (negação longe do termo)
-"Nunca utilizei AWS, GCP ou Azure."             -> GCP e Azure PARTIAL (outra oração
-                                                   por causa da vírgula)
+"Nunca utilizei AWS, GCP ou Azure."            -> GCP e Azure PARTIAL (outra oração
+                                                  por causa da vírgula)
+"Sem experiência em Java e Docker."            -> Docker continua valendo
+"Ainda estou aprendendo Kubernetes."           -> intenção não é negação
 ```
-
-**Por que não foi tratada:** pegar esses casos exige janela de N palavras ou
-análise sintática, e a D1 recusa número arbitrário sem evidência.
 
 ---
 
@@ -304,6 +310,25 @@ análise, o que ainda não existe.
 
 As marcações não guardam o texto analisado. Depois de mudar uma regra, é
 preciso analisar de novo os mesmos currículos e vagas para comparar.
+
+---
+
+## L20 — Seções do currículo dependem de títulos conhecidos · ABERTA
+
+A escolha da evidência (D17) só reconhece os títulos da lista de
+`ResumeSections`. Um currículo com títulos diferentes ("Minha trajetória",
+"Stack") ou com títulos em imagem fica sem seção para aquele trecho, e a
+evidência volta a ser a primeira menção. Uma linha com cara de nome (D2) que
+não seja nome, como um título de projeto com todas as palavras em maiúscula
+inicial, também deixa de se juntar à linha seguinte.
+
+---
+
+## L21 — Formação e idioma não comparam área nem nível · ABERTA
+
+A D18 só mostra uma frase do currículo que parece responder. "Cursando
+Ciência da Computação" na vaga e "Tecnólogo em Gastronomia" no currículo são
+tratados igual, e "Inglês avançado" é respondido por "Inglês básico".
 
 ---
 
