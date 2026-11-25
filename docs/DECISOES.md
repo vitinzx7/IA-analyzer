@@ -652,6 +652,37 @@ A tela continua chamando o número de cobertura (D19): o total aparece como
 
 ---
 
+## D22 — Tela em duas etapas, com resumo e abas
+
+Implementado em `index.html`, `app.js` e `styles.css`.
+
+Problema: formulário, cobertura, simulação, três grupos de requisitos e o
+"não avaliado" ficavam empilhados numa coluna só. Para achar uma coisa era
+preciso rolar a tela inteira.
+
+```
+Entrada    currículo e vaga lado a lado (empilhados no celular)
+Resultado  resumo fixo à esquerda + abas: Requisitos | Como melhorar | Não avaliado
+```
+
+- O resultado substitui o formulário. "Editar análise" volta com os dados
+  preenchidos, e "Voltar ao resultado" reabre o último resultado sem nova
+  análise.
+- Requisitos ganharam filtro por status. As contagens do resumo levam para a
+  aba Requisitos já filtrada.
+- Os botões de certo/errado (D16) ficaram no rodapé de cada cartão, com menos
+  peso visual. A frase longa repetida em todo requisito ausente virou
+  "Nenhum trecho do currículo comprova este requisito.", porque a sugestão
+  condicional agora fica na aba Como melhorar.
+- Movimento: resposta ao clique com `scale(0.97)`, hover só em mouse, entrada
+  curta do resultado (280 ms) e barra da cobertura animada por `transform`.
+  A troca de aba não anima, porque é repetida e pode vir do teclado. Com
+  `prefers-reduced-motion`, sobra só opacidade.
+
+Os ids que a API e os testes usam continuam os mesmos. Nada mudou no servidor.
+
+---
+
 ## Observações do texto real (Bloco 1)
 
 Extraídas de um único currículo real, 3050 caracteres, coluna única. Sustentam

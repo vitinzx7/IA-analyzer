@@ -25,9 +25,12 @@ e roda inteira na máquina.
 
 Abra <http://localhost:8080>. Envie o currículo em PDF (ou cole o texto dele na
 aba **Colar texto**), cole a descrição da vaga e clique em **Analisar** ou use
-`Ctrl` + `Enter`. O resultado mostra o score, a contagem por status, o trecho de
-evidência de cada requisito com o termo destacado e um botão para copiar o
-resultado como texto.
+`Ctrl` + `Enter`. O resultado substitui o formulário: à esquerda fica o resumo
+(cobertura, contagem por status e avisos) e à direita três abas. **Requisitos**
+mostra o trecho de evidência de cada requisito, com filtro por status.
+**Como melhorar** mostra a simulação de melhora. **Não avaliado** mostra o que a
+vaga pede e o programa não avaliou. **Editar análise** volta ao formulário com
+os dados preenchidos, e **Copiar resultado** copia tudo como texto.
 
 Para gerar o JAR:
 
