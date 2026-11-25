@@ -11,12 +11,15 @@ import java.util.Set;
  */
 public final class TechnologyEquivalence {
 
-    private static final Map<String, Set<String>> ACCEPTED = Map.of(
-            "Spring Framework", Set.of("Spring Boot"),
-            "Microsoft Office", Set.of("Office 365"),
-            "SQL", Set.of("PostgreSQL", "MySQL", "SQL Server", "Oracle", "H2"),
-            "Azure", Set.of("Azure Container Apps"),
-            "Docker", Set.of("Docker Compose"));
+    private static final Map<String, Set<String>> ACCEPTED = Map.ofEntries(
+            Map.entry("Spring Framework", Set.of("Spring Boot")),
+            Map.entry("Microsoft Office", Set.of("Office 365")),
+            Map.entry("SQL", Set.of("PostgreSQL", "MySQL", "SQL Server", "Oracle", "H2")),
+            Map.entry("Azure", Set.of("Azure Container Apps")),
+            Map.entry("Docker", Set.of("Docker Compose")),
+            Map.entry("Linux", Set.of("Kali Linux", "Ubuntu", "Debian", "Red Hat")),
+            Map.entry("Windows", Set.of("Windows Server")),
+            Map.entry("Shell Script", Set.of("Bash")));
 
     private TechnologyEquivalence() {
     }

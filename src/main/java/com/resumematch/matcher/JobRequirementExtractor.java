@@ -31,7 +31,8 @@ import com.resumematch.dictionary.TextNormalizer;
  *
  * Dois ou mais termos dentro do mesmo parentese viram um requisito so, para
  * que "noções de redes (TCP/IP, DNS, DHCP)" nao pese como tres. Com "ex.",
- * "como", "etc." ou "similares" no parentese, a lista e de exemplos e vira
+ * "como", "etc." ou "similares" no parentese, ou com todos os termos da mesma
+ * familia ("(Jira, Zendesk, GLPI)"), a lista e de exemplos e vira
  * alternativas; sem isso, vira um conjunto (ver {@link JobRequirement}).
  */
 public final class JobRequirementExtractor {
@@ -151,10 +152,9 @@ public final class JobRequirementExtractor {
             if (technologies.size() < 2) {
                 continue;
             }
-            if (EXAMPLE_CUE.matcher(TextNormalizer.normalize(parentheses.group(1))).find()) {
+            if (EXAMPLE_CUE.matcher(TextNormalizer.normalize(parentheses.group(1))).find()
+                    || TechnologyFamilies.sameFamily(technologies)) {
                 segmentItems.add(new Item(technologies, priority, Kind.ANY, open));
-            } else if (TechnologyFamilies.sameFamily(technologies) && hasOrGap(jobText, inside)) {
-                continue;
             } else {
                 segmentItems.add(new Item(technologies, priority, Kind.ALL, open));
             }
@@ -245,15 +245,6 @@ public final class JobRequirementExtractor {
             }
         }
         return List.copyOf(requirements.values());
-    }
-
-    private boolean hasOrGap(String jobText, List<TermOccurrence> occurrences) {
-        for (int i = 1; i < occurrences.size(); i++) {
-            if (gap(jobText, occurrences, i) == Gap.OR) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private Gap gap(String jobText, List<TermOccurrence> occurrences, int index) {

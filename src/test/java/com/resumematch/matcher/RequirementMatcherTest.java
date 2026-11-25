@@ -62,6 +62,16 @@ class RequirementMatcherTest {
     }
 
     @Test
+    void distribuicaoLinuxEWindowsServerSatisfazemOGenerico() {
+        assertThat(match("Configurei o Kali Linux no laboratorio.", "Linux").getFirst().status())
+                .isEqualTo(MatchStatus.MATCH);
+        assertThat(match("Configurei o Windows Server 2022 no laboratorio.", "Windows").getFirst().status())
+                .isEqualTo(MatchStatus.MATCH);
+        assertThat(match("Configurei o Linux no laboratorio.", "Kali Linux").getFirst().status())
+                .isEqualTo(MatchStatus.MISSING);
+    }
+
+    @Test
     void mantemAPrioridadeDoRequisito() {
         String resume = "Desenvolvi uma API em Java.";
         List<RequirementMatch> result = matcher.matchRequirements(List.of(

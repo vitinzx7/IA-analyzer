@@ -201,6 +201,54 @@ public class TechnologyDictionary {
         map.put("Help Desk", List.of("helpdesk"));
         map.put("Service Desk", List.of("servicedesk"));
         map.put("ITIL", List.of("itil foundation"));
+        map.put("Suporte Técnico", List.of(
+                "suporte ao usuario", "suporte aos usuarios", "suporte a usuarios", "suporte de ti"));
+
+        // Chamados, scripts e contas: termos das vagas de suporte e infraestrutura.
+        map.put("Jira", List.of("jira software", "jira service management"));
+        map.put("Confluence", List.of());
+        map.put("Zendesk", List.of());
+        map.put("GLPI", List.of());
+        map.put("ServiceNow", List.of("service now"));
+        map.put("PowerShell", List.of("power shell"));
+        map.put("Bash", List.of());
+        map.put("Shell Script", List.of("shell scripting", "shell scripts", "script shell", "scripts shell"));
+        map.put("Google Workspace", List.of("g suite", "gsuite", "google apps"));
+        map.put("Microsoft Teams", List.of("ms teams"));
+        map.put("Microsoft Intune", List.of("intune"));
+        map.put("Microsoft Exchange", List.of("exchange server", "exchange online"));
+        map.put("LDAP", List.of());
+
+        map.put("VPN", List.of("vpns"));
+        map.put("VLAN", List.of("vlans"));
+        map.put("Firewall", List.of("firewalls"));
+        map.put("SSH", List.of());
+        map.put("Cabeamento Estruturado", List.of());
+        map.put("CCNA", List.of());
+        map.put("Ubuntu", List.of());
+        map.put("Debian", List.of());
+        map.put("Red Hat", List.of("rhel", "red hat enterprise linux"));
+        map.put("Kali Linux", List.of());
+        map.put("VMware", List.of("vsphere", "esxi"));
+        map.put("Hyper-V", List.of("hyperv"));
+        map.put("VirtualBox", List.of("virtual box"));
+        map.put("Proxmox", List.of());
+        map.put("Zabbix", List.of());
+        map.put("Nagios", List.of());
+        map.put("Grafana", List.of());
+        map.put("Prometheus", List.of());
+
+        map.put("Wireshark", List.of());
+        map.put("Nmap", List.of());
+        map.put("SIEM", List.of("siems"));
+        map.put("Splunk", List.of());
+        map.put("Wazuh", List.of());
+        map.put("Sysmon", List.of());
+        map.put("Event Viewer", List.of("visualizador de eventos"));
+        map.put("MITRE ATT&CK", List.of("mitre attack"));
+        map.put("OWASP", List.of());
+        map.put("ISO 27001", List.of("iso/iec 27001"));
+        map.put("LGPD", List.of("lei geral de protecao de dados"));
 
         map.put("RPA", List.of("robotic process automation"));
         map.put("UiPath", List.of());

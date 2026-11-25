@@ -137,4 +137,26 @@ class TechnologyDictionaryTest {
     void naoReconheceTermoQuandoVersaoColadaContinuaComLetra() {
         assertThat(technologiesIn("Trabalhei com Java2EE")).isEmpty();
     }
+
+    @Test
+    void reconheceFerramentasDeSuporte() {
+        assertThat(technologiesIn(
+                "Chamados no Jira, Zendesk e GLPI; scripts em PowerShell e Bash; contas no G Suite."))
+                .containsExactly("Jira", "Zendesk", "GLPI", "PowerShell", "Bash", "Google Workspace");
+        assertThat(technologiesIn("Prestei suporte aos usuários e configurei VPNs e VLANs."))
+                .containsExactly("Suporte Técnico", "VPN", "VLAN");
+    }
+
+    @Test
+    void reconheceTermosDeSeguranca() {
+        assertThat(technologiesIn("Analisei logs do Sysmon no Splunk e no Wazuh com MITRE ATT&CK."))
+                .containsExactly("Sysmon", "Splunk", "Wazuh", "MITRE ATT&CK");
+        assertThat(technologiesIn("Varredura com Nmap e captura no Wireshark."))
+                .containsExactly("Nmap", "Wireshark");
+    }
+
+    @Test
+    void distribuicaoLinuxEhUmTermoSo() {
+        assertThat(technologiesIn("Laboratorio com Kali Linux e Ubuntu")).containsExactly("Kali Linux", "Ubuntu");
+    }
 }

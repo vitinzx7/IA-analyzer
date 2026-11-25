@@ -17,7 +17,13 @@ public final class TechnologyFamilies {
     private static final List<Set<String>> FAMILIES = List.of(
             Set.of("Azure", "AWS", "GCP"),
             Set.of("PostgreSQL", "MySQL", "SQL Server", "Oracle"),
-            Set.of("GitHub", "GitLab"));
+            Set.of("GitHub", "GitLab"),
+            Set.of("Jira", "Zendesk", "GLPI", "ServiceNow"),
+            Set.of("PowerShell", "Bash", "Shell Script"),
+            Set.of("Google Workspace", "Office 365"),
+            Set.of("VMware", "Hyper-V", "VirtualBox", "Proxmox"),
+            Set.of("Zabbix", "Nagios", "Prometheus", "Grafana"),
+            Set.of("Splunk", "Wazuh"));
 
     private TechnologyFamilies() {
     }

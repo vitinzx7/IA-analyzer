@@ -257,14 +257,33 @@ class JobRequirementExtractorTest {
     void listaNomesQueODicionarioNaoConhece() {
         JobExtraction job = extractor.read("""
                 Diferenciais
-                Ferramentas de chamados (Jira, Zendesk, GLPI) ou scripts (PowerShell/Bash).
+                Ferramentas de chamados (Movidesk, Octadesk) ou scripts simples.
                 Apoiar contas (Active Directory, Google Workspace / Microsoft 365) nível N1/N2.
                 """);
 
-        assertThat(job.unknownTerms()).containsExactly(
-                "Jira", "Zendesk", "GLPI", "PowerShell", "Bash", "Google Workspace", "N1", "N2");
+        assertThat(job.unknownTerms()).containsExactly("Movidesk", "Octadesk", "N1", "N2");
         assertThat(job.unevaluated()).extracting(UnevaluatedItem::reason)
                 .containsExactly(UnevaluatedItem.Reason.NO_KNOWN_TERM);
+    }
+
+    @Test
+    void reconheceFerramentasDeChamadoEScriptsDaVagaDeInfra() {
+        JobExtraction job = extractor.read("""
+                Será um diferencial:
+                Conhecimento básico em ferramentas de chamados (Jira, Zendesk, GLPI) ou scripts simples (PowerShell/Bash);
+                """);
+
+        assertThat(job.requirements()).containsExactly(
+                new JobRequirement("Jira / Zendesk / GLPI", PREFERRED),
+                new JobRequirement("PowerShell / Bash", PREFERRED));
+        assertThat(job.unknownTerms()).isEmpty();
+        assertThat(job.unevaluated()).isEmpty();
+    }
+
+    @Test
+    void parentesesDaMesmaFamiliaSemOuViraAlternativa() {
+        assertThat(extractor.extract("Nuvem (AWS, Azure, GCP).")).containsExactly("AWS / Azure / GCP");
+        assertThat(extractor.extract("Protocolos (TCP/IP, DNS, DHCP).")).containsExactly("TCP/IP + DNS + DHCP");
     }
 
     @Test

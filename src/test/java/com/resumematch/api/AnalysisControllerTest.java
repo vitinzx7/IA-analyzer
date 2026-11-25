@@ -97,14 +97,14 @@ class AnalysisControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {"resume":"Desenvolvi uma API em Java.",
-                         "job":"Requisitos:\\nJava.\\nInglês técnico.\\nFerramentas como GLPI."}
+                         "job":"Requisitos:\\nJava.\\nInglês técnico.\\nFerramentas como Movidesk."}
                         """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.unevaluated[0].text").value("Inglês técnico."))
                 .andExpect(jsonPath("$.unevaluated[0].section").value("REQUIREMENTS"))
                 .andExpect(jsonPath("$.unevaluated[0].reason").value("LANGUAGE"))
                 .andExpect(jsonPath("$.unevaluated[1].reason").value("NO_KNOWN_TERM"))
-                .andExpect(jsonPath("$.unknownTerms[0]").value("GLPI"));
+                .andExpect(jsonPath("$.unknownTerms[0]").value("Movidesk"));
     }
 
     @Test
