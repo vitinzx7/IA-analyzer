@@ -9,103 +9,151 @@
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+<header class="topbar">
+    <div class="topbar-inner">
+        <span class="brand">
+            <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+                <rect width="32" height="32" rx="8"/>
+                <path d="M9 17l5 5 9-11"/>
+            </svg>
+            <span class="brand-name">Resume Match</span>
+        </span>
+        <div class="topbar-actions" id="result-actions" hidden>
+            <span id="copy-status" class="hint" role="status"></span>
+            <button id="copy" class="secondary" type="button">Copiar resultado</button>
+            <button id="again" type="button">Editar análise</button>
+        </div>
+    </div>
+</header>
+
 <main class="page">
-    <header class="hero">
-        <p class="eyebrow">POC de análise de currículo</p>
-        <h1>Seu currículo combina com esta vaga?</h1>
-        <p class="subtitle">
-            Envie o currículo e cole a descrição da vaga. O resultado mostra quanto
-            dos requisitos técnicos da vaga o currículo comprova, e o trecho que sustenta cada um.
-        </p>
-    </header>
+    <section id="entry" class="entry" aria-labelledby="entry-title">
+        <header class="hero">
+            <p class="eyebrow">POC de análise de currículo</p>
+            <h1 id="entry-title">Seu currículo combina com esta vaga?</h1>
+            <p class="subtitle">
+                Envie o currículo e cole a descrição da vaga. O resultado mostra quanto
+                dos requisitos técnicos da vaga o currículo comprova, e o trecho que sustenta cada um.
+            </p>
+        </header>
 
-    <section class="card">
-        <form id="analysis-form" novalidate>
-            <fieldset class="field">
-                <legend>Currículo</legend>
-                <div class="tabs" role="tablist" aria-label="Formato do currículo">
-                    <button type="button" class="tab" role="tab" id="tab-pdf"
-                            aria-selected="true" aria-controls="panel-pdf">PDF</button>
-                    <button type="button" class="tab" role="tab" id="tab-text"
-                            aria-selected="false" aria-controls="panel-text" tabindex="-1">Colar texto</button>
+        <form id="analysis-form" class="card entry-form" novalidate>
+            <div class="entry-grid">
+                <fieldset class="field">
+                    <legend><span class="step" aria-hidden="true">1</span>Currículo</legend>
+                    <div class="segmented" role="tablist" aria-label="Formato do currículo">
+                        <button type="button" class="segment" role="tab" id="tab-pdf"
+                                aria-selected="true" aria-controls="panel-pdf">PDF</button>
+                        <button type="button" class="segment" role="tab" id="tab-text"
+                                aria-selected="false" aria-controls="panel-text" tabindex="-1">Colar texto</button>
+                    </div>
+
+                    <div id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf">
+                        <label class="dropzone" id="dropzone" for="resume">
+                            <input id="resume" name="resume" type="file" accept=".pdf,application/pdf"
+                                   class="visually-hidden">
+                            <span class="dropzone-icon" aria-hidden="true">PDF</span>
+                            <span class="dropzone-title" id="file-label">Arraste o PDF aqui ou clique para escolher</span>
+                            <span class="hint" id="file-detail">Até 10 MB. O PDF não é armazenado.</span>
+                        </label>
+                    </div>
+
+                    <div id="panel-text" role="tabpanel" aria-labelledby="tab-text" hidden>
+                        <label for="resume-text" class="visually-hidden">Texto do currículo</label>
+                        <textarea id="resume-text" rows="10"
+                                  placeholder="Cole aqui o texto do currículo..."></textarea>
+                        <p class="hint"><span id="resume-count">0</span> / 200.000 caracteres</p>
+                    </div>
+                </fieldset>
+
+                <div class="field">
+                    <label for="job"><span class="step" aria-hidden="true">2</span>Descrição da vaga</label>
+                    <textarea id="job" name="job" rows="10"
+                              placeholder="Cole aqui a descrição da vaga..."></textarea>
+                    <p class="hint"><span id="job-count">0</span> / 50.000 caracteres</p>
                 </div>
-
-                <div id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf">
-                    <label class="dropzone" id="dropzone" for="resume">
-                        <input id="resume" name="resume" type="file" accept=".pdf,application/pdf"
-                               class="visually-hidden">
-                        <span class="dropzone-icon" aria-hidden="true">PDF</span>
-                        <span class="dropzone-title" id="file-label">Arraste o PDF aqui ou clique para escolher</span>
-                        <span class="hint" id="file-detail">Até 10 MB. O PDF não é armazenado.</span>
-                    </label>
-                </div>
-
-                <div id="panel-text" role="tabpanel" aria-labelledby="tab-text" hidden>
-                    <label for="resume-text" class="visually-hidden">Texto do currículo</label>
-                    <textarea id="resume-text" rows="10"
-                              placeholder="Cole aqui o texto do currículo..."></textarea>
-                    <p class="hint"><span id="resume-count">0</span> / 200.000 caracteres</p>
-                </div>
-            </fieldset>
-
-            <div class="field">
-                <label for="job">Descrição da vaga</label>
-                <textarea id="job" name="job" rows="10"
-                          placeholder="Cole aqui a descrição da vaga..."></textarea>
-                <p class="hint">
-                    <span id="job-count">0</span> / 50.000 caracteres
-                    <span class="kbd-hint">· <kbd>Ctrl</kbd> + <kbd>Enter</kbd> analisa</span>
-                </p>
             </div>
 
-            <button id="submit" type="submit">
-                <span class="spinner" aria-hidden="true"></span>
-                <span id="submit-label">Analisar</span>
-            </button>
+            <div class="entry-footer">
+                <p class="hint kbd-hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> analisa</p>
+                <button id="back-to-result" class="secondary" type="button" hidden>Voltar ao resultado</button>
+                <button id="submit" type="submit">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span id="submit-label">Analisar</span>
+                </button>
+            </div>
+            <p id="error" class="error" role="alert" hidden></p>
         </form>
-        <p id="error" class="error" role="alert" hidden></p>
     </section>
 
-    <section id="result" class="result" hidden aria-live="polite">
-        <div class="card score-card">
-            <div class="score-head">
-                <div>
-                    <p class="eyebrow">Cobertura técnica da vaga</p>
-                    <p class="score"><span id="score">0</span><span class="score-max" id="score-max">/100</span></p>
-                </div>
-                <ul class="tally" id="tally" aria-label="Requisitos por status"></ul>
-            </div>
+    <section id="result" class="result" hidden aria-label="Resultado da análise" tabindex="-1">
+        <aside class="card score-card" aria-label="Resumo">
+            <p class="eyebrow">Cobertura técnica da vaga</p>
+            <p class="score"><span id="score">0</span><span class="score-max" id="score-max">/100</span></p>
             <div class="score-bar" role="progressbar" aria-label="Cobertura técnica da vaga"
                  aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 <span id="score-fill"></span>
             </div>
-            <p id="pdf-warning" class="warning" role="alert" hidden></p>
-            <p class="hint" id="recognized"></p>
+            <ul class="tally" id="tally" aria-label="Requisitos por status"></ul>
             <p class="hint" id="required-gap"></p>
-            <p class="hint" id="feedback-summary" role="status"></p>
-            <p id="summary" class="summary"></p>
-            <div class="actions">
-                <button id="copy" class="secondary" type="button">Copiar resultado</button>
-                <button id="again" class="secondary" type="button">Editar e analisar de novo</button>
-                <span id="copy-status" class="hint" role="status"></span>
+            <p id="pdf-warning" class="warning" role="alert" hidden></p>
+            <details class="more">
+                <summary>Detalhes da análise</summary>
+                <p class="hint" id="recognized"></p>
+                <p id="summary" class="summary"></p>
+                <p class="hint" id="feedback-summary" role="status"></p>
+            </details>
+        </aside>
+
+        <div class="result-main">
+            <div class="result-tabs" role="tablist" aria-label="Partes do resultado">
+                <button type="button" class="result-tab" role="tab" id="tab-requirements"
+                        aria-selected="true" aria-controls="panel-requirements">
+                    Requisitos <span class="count" id="count-requirements">0</span>
+                </button>
+                <button type="button" class="result-tab" role="tab" id="tab-improve"
+                        aria-selected="false" aria-controls="panel-improve" tabindex="-1">
+                    Como melhorar <span class="count" id="count-improve">0</span>
+                </button>
+                <button type="button" class="result-tab" role="tab" id="tab-unevaluated"
+                        aria-selected="false" aria-controls="panel-unevaluated" tabindex="-1">
+                    Não avaliado <span class="count" id="count-unevaluated">0</span>
+                </button>
             </div>
+
+            <section id="panel-requirements" class="result-panel" role="tabpanel"
+                     aria-labelledby="tab-requirements">
+                <div class="filters" id="filters" role="group" aria-label="Filtrar requisitos por status"></div>
+                <div id="groups" class="groups"></div>
+            </section>
+
+            <section id="panel-improve" class="result-panel" role="tabpanel"
+                     aria-labelledby="tab-improve" hidden>
+                <div id="simulation" class="simulation">
+                    <div class="panel-head">
+                        <p class="eyebrow">Simulação de melhora</p>
+                        <h2>O que aumentaria a cobertura, se for verdade</h2>
+                        <p class="hint">
+                            Não muda a cobertura técnica e não escreve o currículo. O programa não sabe
+                            se você usou o termo: cada sugestão só vale se for verdade.
+                        </p>
+                    </div>
+                    <p id="simulation-total" class="simulation-total"></p>
+                    <ul id="suggestions" class="requirement-list"></ul>
+                    <div id="gaps" class="gaps"></div>
+                </div>
+            </section>
+
+            <section id="panel-unevaluated" class="result-panel" role="tabpanel"
+                     aria-labelledby="tab-unevaluated" hidden>
+                <div class="panel-head">
+                    <p class="eyebrow">Fora do cálculo</p>
+                    <h2>O que a vaga pede e o programa não avaliou</h2>
+                    <p class="hint">Estes trechos da vaga não entraram na cobertura. Confira você mesmo.</p>
+                </div>
+                <div id="unevaluated"></div>
+            </section>
         </div>
-
-        <section id="simulation" class="card simulation" aria-labelledby="simulation-title" hidden>
-            <div>
-                <p class="eyebrow">Simulação de melhora</p>
-                <h2 id="simulation-title">O que aumentaria a cobertura, se for verdade</h2>
-                <p class="hint">
-                    Não muda a cobertura acima e não escreve o currículo. O programa não sabe
-                    se você usou o termo: cada sugestão só vale se for verdade.
-                </p>
-            </div>
-            <ul id="suggestions" class="requirement-list"></ul>
-            <p id="simulation-total" class="simulation-total"></p>
-            <div id="gaps" class="gaps"></div>
-        </section>
-
-        <div id="groups" class="groups"></div>
     </section>
 
     <footer class="footer">

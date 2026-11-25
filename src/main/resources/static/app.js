@@ -5,7 +5,16 @@ const ALTERNATIVE_SEPARATOR = " / ";
 const COMPONENT_SEPARATOR = " + ";
 
 const form = document.querySelector("#analysis-form");
-const tabs = [...document.querySelectorAll(".tab")];
+const tabs = [...document.querySelectorAll(".segment")];
+const entry = document.querySelector("#entry");
+const resultActions = document.querySelector("#result-actions");
+const backToResult = document.querySelector("#back-to-result");
+const resultTabs = [...document.querySelectorAll(".result-tab")];
+const filters = document.querySelector("#filters");
+const unevaluatedBox = document.querySelector("#unevaluated");
+const countRequirements = document.querySelector("#count-requirements");
+const countImprove = document.querySelector("#count-improve");
+const countUnevaluated = document.querySelector("#count-unevaluated");
 const panelPdf = document.querySelector("#panel-pdf");
 const panelText = document.querySelector("#panel-text");
 const dropzone = document.querySelector("#dropzone");
@@ -34,7 +43,6 @@ const again = document.querySelector("#again");
 const feedbackSummary = document.querySelector("#feedback-summary");
 const requiredGap = document.querySelector("#required-gap");
 const pdfWarning = document.querySelector("#pdf-warning");
-const simulation = document.querySelector("#simulation");
 const suggestionsList = document.querySelector("#suggestions");
 const simulationTotal = document.querySelector("#simulation-total");
 const gapsBox = document.querySelector("#gaps");
@@ -112,6 +120,7 @@ const VERDICT_LABELS = { MATCH: "encontrado", PARTIAL: "parcial", MISSING: "ause
 let mode = "pdf";
 let lastResult = null;
 let analysisId = null;
+let statusFilter = "ALL";
 
 /* ---------- entrada ---------- */
 
@@ -289,7 +298,7 @@ function render(data) {
     scoreElement.parentElement.classList.toggle("no-score", !hasScore);
     scoreMax.hidden = !hasScore;
     tally.hidden = requirements.length === 0;
-    scoreFill.style.width = `${Math.min(100, Math.max(0, score))}%`;
+    scoreFill.style.transform = "scaleX(0)";
     scoreBar.hidden = !hasScore;
     scoreBar.setAttribute("aria-valuenow", String(score));
     scoreBar.dataset.level = score >= 70 ? "high" : score >= 40 ? "medium" : "low";
@@ -297,8 +306,16 @@ function render(data) {
     tally.replaceChildren(...GROUPS.map((group) => {
         const count = requirements.filter((r) => r.status === group.status).length;
         const item = document.createElement("li");
-        item.className = `chip ${group.className}`;
-        item.textContent = `${count} ${group.short}`;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `chip ${group.className}`;
+        button.textContent = `${count} ${group.short}`;
+        button.title = `Ver só os ${group.title.toLowerCase()}`;
+        button.addEventListener("click", () => {
+            setStatusFilter(group.status);
+            selectResultTab("tab-requirements");
+        });
+        item.append(button);
         return item;
     }));
 
@@ -307,17 +324,118 @@ function render(data) {
         : `${requirements.length} requisito(s) reconhecido(s) pelo dicionário.`;
     summary.textContent = data.summary || "";
     copyStatus.textContent = "";
-    renderSimulation(data.improvement, hasScore ? score : null);
 
-    const sections = requirements.length === 0
-        ? []
-        : GROUPS.map((group) => renderGroup(group, requirements));
-    if (unevaluated.length > 0 || unknownTerms.length > 0) {
-        sections.push(renderUnevaluated(unevaluated, unknownTerms));
-    }
-    groups.replaceChildren(...sections);
+    countRequirements.textContent = String(requirements.length);
+    statusFilter = "ALL";
+    renderRequirements();
+    renderSimulation(data.improvement, hasScore ? score : null);
+    countUnevaluated.textContent = String(unevaluated.length + unknownTerms.length);
+    unevaluatedBox.replaceChildren(renderUnevaluated(data.unevaluated || [], data.unknownTerms || []));
+
+    selectResultTab("tab-requirements");
+    showResult();
+    void scoreFill.offsetWidth;
+    scoreFill.style.transform = `scaleX(${Math.min(100, Math.max(0, score)) / 100})`;
+}
+
+/* ---------- etapas e abas ---------- */
+
+/** O resultado ocupa a tela; o formulário fica guardado para editar. */
+function showResult() {
+    entry.hidden = true;
     result.hidden = false;
-    result.scrollIntoView({ behavior: "smooth", block: "start" });
+    resultActions.hidden = false;
+    window.scrollTo({ top: 0 });
+    result.focus({ preventScroll: true });
+}
+
+function showEntry() {
+    hideError();
+    result.hidden = true;
+    resultActions.hidden = true;
+    entry.hidden = false;
+    backToResult.hidden = lastResult === null;
+    window.scrollTo({ top: 0 });
+    jobInput.focus({ preventScroll: true });
+}
+
+again.addEventListener("click", showEntry);
+backToResult.addEventListener("click", showResult);
+
+resultTabs.forEach((tab, index) => {
+    tab.addEventListener("click", () => selectResultTab(tab.id));
+    tab.addEventListener("keydown", (event) => {
+        const last = resultTabs.length - 1;
+        const next = {
+            ArrowRight: index === last ? 0 : index + 1,
+            ArrowLeft: index === 0 ? last : index - 1,
+            Home: 0,
+            End: last
+        }[event.key];
+        if (next !== undefined) {
+            event.preventDefault();
+            selectResultTab(resultTabs[next].id);
+            resultTabs[next].focus();
+        }
+    });
+});
+
+function selectResultTab(id) {
+    resultTabs.forEach((tab) => {
+        const selected = tab.id === id;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        document.getElementById(tab.getAttribute("aria-controls")).hidden = !selected;
+    });
+}
+
+/** Botões "Todos / Encontrados / Parciais / Ausentes" acima da lista. */
+function renderFilters(requirements) {
+    const options = [
+        { status: "ALL", title: "Todos", className: "", count: requirements.length },
+        ...GROUPS.map((group) => ({
+            status: group.status,
+            title: group.title,
+            className: group.className,
+            count: requirements.filter((r) => r.status === group.status).length
+        }))
+    ];
+    filters.hidden = requirements.length === 0;
+    filters.replaceChildren(...options.map((option) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `filter ${option.className}`;
+        button.setAttribute("aria-pressed", String(option.status === statusFilter));
+        button.append(option.title, " ");
+        const count = document.createElement("span");
+        count.className = "count";
+        count.textContent = String(option.count);
+        button.append(count);
+        button.addEventListener("click", () => setStatusFilter(option.status));
+        return button;
+    }));
+}
+
+function setStatusFilter(status) {
+    statusFilter = status;
+    renderRequirements();
+}
+
+function renderRequirements() {
+    const requirements = lastResult ? lastResult.requirements : [];
+    renderFilters(requirements);
+    if (requirements.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty";
+        empty.textContent = "Nenhum requisito da vaga foi reconhecido pelo dicionário, "
+            + "então não há cálculo. Veja a aba \"Não avaliado\".";
+        groups.replaceChildren(empty);
+        return;
+    }
+    const shown = statusFilter === "ALL"
+        ? GROUPS.filter((group) => requirements.some((r) => r.status === group.status))
+        : GROUPS.filter((group) => group.status === statusFilter);
+    groups.replaceChildren(...shown.map((group) => renderGroup(group, requirements)));
 }
 
 function renderGroup(group, requirements) {
@@ -402,8 +520,7 @@ function renderRequirement(item) {
     } else {
         const hint = document.createElement("p");
         hint.className = "hint";
-        hint.textContent = "Se você realmente tem experiência com este termo, "
-            + "considere deixar isso explícito no currículo.";
+        hint.textContent = "Nenhum trecho do currículo comprova este requisito.";
         entry.append(hint);
     }
     entry.append(renderVerdict(item));
@@ -564,16 +681,15 @@ function tag(text, title) {
  * vêm prontos do servidor, calculados com a mesma conta da cobertura real.
  */
 function renderSimulation(improvement, score) {
-    simulation.hidden = score === null || !improvement;
-    if (simulation.hidden) {
-        return;
-    }
-    const suggestions = Array.isArray(improvement.suggestions) ? improvement.suggestions : [];
-    const gaps = Array.isArray(improvement.gaps) ? improvement.gaps : [];
+    const suggestions = improvement && Array.isArray(improvement.suggestions) ? improvement.suggestions : [];
+    const gaps = improvement && Array.isArray(improvement.gaps) ? improvement.gaps : [];
+    countImprove.textContent = String(suggestions.length);
 
     suggestionsList.replaceChildren(...suggestions.map(renderSuggestion));
     suggestionsList.hidden = suggestions.length === 0;
-    if (typeof improvement.scoreWithAll === "number") {
+    if (score === null || !improvement) {
+        simulationTotal.textContent = "Sem requisito reconhecido, não há o que simular.";
+    } else if (typeof improvement.scoreWithAll === "number") {
         simulationTotal.textContent = `Fazendo todas: a cobertura iria de ${formatScore(score)} `
             + `para ${formatScore(improvement.scoreWithAll)}/100.`;
     } else if (gaps.length === 0) {
@@ -681,18 +797,16 @@ function spokenList(names, conjunction) {
  * dicionário, formação, idioma e nomes que o dicionário não conhece.
  */
 function renderUnevaluated(items, unknownTerms) {
-    const section = document.createElement("section");
-    section.className = "group unevaluated";
+    const section = document.createElement("div");
+    section.className = "unevaluated";
 
-    const header = document.createElement("div");
-    header.className = "group-header";
-    const title = document.createElement("h2");
-    title.textContent = "Não avaliado pelo programa";
-    const note = document.createElement("p");
-    note.className = "hint";
-    note.textContent = "Estes trechos da vaga não entraram no score. Confira você mesmo.";
-    header.append(title, note);
-    section.append(header);
+    if (items.length === 0 && unknownTerms.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty";
+        empty.textContent = "Nada ficou de fora: todo trecho de requisito da vaga tinha termo do dicionário.";
+        section.append(empty);
+        return section;
+    }
 
     if (items.length > 0) {
         const list = document.createElement("ul");
@@ -847,12 +961,6 @@ function simulationLines(improvement, score) {
     lines.push("");
     return lines;
 }
-
-again.addEventListener("click", () => {
-    hideError();
-    form.scrollIntoView({ behavior: "smooth", block: "start" });
-    jobInput.focus({ preventScroll: true });
-});
 
 /* ---------- utilidades ---------- */
 

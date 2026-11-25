@@ -64,6 +64,19 @@ class WebUiIntegrationTest {
     }
 
     @Test
+    void resultadoSeparaResumoDasAbas() throws Exception {
+        assertThat(get("/").body())
+                .contains("id=\"entry\"")
+                .contains("id=\"tab-requirements\"")
+                .contains("id=\"tab-improve\"")
+                .contains("id=\"tab-unevaluated\"")
+                .contains("id=\"filters\"");
+        assertThat(get("/app.js").body())
+                .contains("selectResultTab")
+                .contains("setStatusFilter");
+    }
+
+    @Test
     void scriptEnviaMarcacaoDeCertoOuErrado() throws Exception {
         assertThat(get("/").body()).contains("id=\"feedback-summary\"");
         assertThat(get("/app.js").body())
