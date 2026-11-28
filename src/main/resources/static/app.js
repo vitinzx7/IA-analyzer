@@ -47,6 +47,11 @@ const suggestionsList = document.querySelector("#suggestions");
 const simulationTotal = document.querySelector("#simulation-total");
 const simulationRounding = document.querySelector("#simulation-rounding");
 const gapsBox = document.querySelector("#gaps");
+const previousAnalysis = document.querySelector("#previous-analysis");
+const patternsCount = document.querySelector("#patterns-count");
+const patternsEmpty = document.querySelector("#patterns-empty");
+const patternsList = document.querySelector("#patterns-list");
+const patternsUnknown = document.querySelector("#patterns-unknown");
 
 /** Mesmo limite do servidor: abaixo disso é ruído do PDF. */
 const MIN_HIDDEN_CHARS = 10;
@@ -120,6 +125,10 @@ const SUGGESTION_TYPES = {
  * as sugestões pode dar alguns décimos a mais ou a menos que o total.
  */
 const ROUNDING_NOTE = "Valores arredondados: a soma das sugestões pode diferir do total em alguns décimos.";
+
+/** Quantos requisitos e termos desconhecidos a lista de padrões mostra. */
+const PATTERNS_SHOWN = 15;
+const UNKNOWN_SHOWN = 10;
 
 const STATUS_MARKS = { MATCH: "✓", PARTIAL: "~", MISSING: "✗" };
 const VERDICT_LABELS = { MATCH: "encontrado", PARTIAL: "parcial", MISSING: "ausente" };
@@ -232,6 +241,7 @@ form.addEventListener("submit", async (event) => {
             throw new Error(payload.detail || "Não foi possível concluir a análise.");
         }
         render(payload);
+        loadPatterns();
     } catch (error) {
         showError(error instanceof TypeError
             ? "Não foi possível falar com o servidor. Ele está rodando?"
@@ -302,6 +312,9 @@ function render(data) {
     const warning = pdfWarningText(data.pdfCheck);
     pdfWarning.textContent = warning;
     pdfWarning.hidden = !warning;
+    const previous = previousText(data.previous, hasScore ? score : null);
+    previousAnalysis.textContent = previous;
+    previousAnalysis.hidden = !previous;
     scoreElement.parentElement.classList.toggle("no-score", !hasScore);
     scoreMax.hidden = !hasScore;
     tally.hidden = requirements.length === 0;
@@ -653,6 +666,76 @@ function pdfWarningText(check) {
     return parts.join(" ");
 }
 
+/** Aviso de vaga já analisada, com a cobertura de antes para comparar. */
+function previousText(previous, current) {
+    if (!previous || !previous.count) {
+        return "";
+    }
+    const times = previous.count === 1 ? "1 vez" : `${previous.count} vezes`;
+    const hadScore = typeof previous.lastCoverage === "number";
+    const before = hadScore ? formatScore(previous.lastCoverage) : "sem cálculo";
+    let text = `Você já analisou esta vaga ${times}. A última foi em ${formatDateTime(previous.lastAt)}, `
+        + `com cobertura ${before}.`;
+    if (hadScore && current !== null) {
+        const diff = Math.round((current - previous.lastCoverage) * 10) / 10;
+        text += diff === 0
+            ? " A cobertura não mudou."
+            : ` Agora: ${formatScore(current)} (${diff > 0 ? "+" : ""}${formatScore(diff)}).`;
+    }
+    return text;
+}
+
+/* ---------- padrões das vagas ---------- */
+
+async function loadPatterns() {
+    try {
+        const response = await fetch("/api/patterns");
+        if (response.ok) {
+            renderPatterns(await response.json());
+        }
+    } catch {
+        // Sem servidor, o erro aparece quando a pessoa tenta analisar.
+    }
+}
+
+function renderPatterns(data) {
+    const requirements = Array.isArray(data.requirements) ? data.requirements : [];
+    const unknown = Array.isArray(data.unknownTerms) ? data.unknownTerms : [];
+    const jobs = data.jobs || 0;
+    patternsCount.textContent = !data.enabled ? "desligado"
+        : jobs === 1 ? "1 vaga" : `${jobs} vagas`;
+    patternsEmpty.hidden = data.enabled && jobs > 0;
+    patternsEmpty.textContent = data.enabled
+        ? "Nenhuma vaga na memória ainda. Cada análise grava uma linha em vagas.csv."
+        : "A memória de vagas está desligada (resumematch.jobs.enabled=false).";
+    patternsList.replaceChildren(...requirements.slice(0, PATTERNS_SHOWN)
+        .map((item) => renderPattern(item, jobs)));
+    patternsUnknown.hidden = unknown.length === 0;
+    patternsUnknown.textContent = "Pedidos que o dicionário não conhece: "
+        + unknown.slice(0, UNKNOWN_SHOWN).map((term) => `${term.name} (${term.jobs})`).join(", ") + ".";
+}
+
+function renderPattern(item, jobs) {
+    const row = document.createElement("li");
+    row.className = "pattern";
+    const name = document.createElement("span");
+    name.className = "pattern-name";
+    name.textContent = item.name;
+    const count = document.createElement("span");
+    count.className = "pattern-count";
+    count.textContent = `${item.jobs} de ${jobs} (${Math.round(item.jobs / jobs * 100)}%)`;
+    const bar = document.createElement("span");
+    bar.className = "pattern-bar";
+    bar.style.setProperty("--share", String(item.jobs / jobs));
+    const detail = document.createElement("span");
+    detail.className = "pattern-detail";
+    detail.textContent = item.preferred === 0 ? "obrigatório"
+        : item.required === 0 ? "diferencial"
+            : `obrigatório em ${item.required}, diferencial em ${item.preferred}`;
+    row.append(name, count, bar, detail);
+    return row;
+}
+
 /** Quantos obrigatórios têm alguma evidência e quais não têm nenhuma. */
 function requiredGapText(requirements) {
     const required = requirements.filter((r) => r.priority !== "PREFERRED");
@@ -981,6 +1064,12 @@ function formatScore(score) {
     return Number.isInteger(score) ? String(score) : score.toFixed(1);
 }
 
+/** "2026-11-28 15:12:24" vira "28/11/2026 às 15:12". */
+function formatDateTime(value) {
+    const parts = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/.exec(value || "");
+    return parts ? `${parts[3]}/${parts[2]}/${parts[1]} às ${parts[4]}:${parts[5]}` : "data desconhecida";
+}
+
 function formatSize(bytes) {
     if (bytes < 1024 * 1024) {
         return `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -1008,3 +1097,5 @@ function hideError() {
     errorBox.hidden = true;
     errorBox.textContent = "";
 }
+
+loadPatterns();

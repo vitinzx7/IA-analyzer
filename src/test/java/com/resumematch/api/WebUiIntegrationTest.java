@@ -82,7 +82,7 @@ class WebUiIntegrationTest {
             ids.add(matcher.group(1));
         }
 
-        assertThat(ids).contains("simulation", "simulation-rounding").doesNotHaveDuplicates();
+        assertThat(ids).contains("simulation", "simulation-rounding", "patterns", "previous-analysis").doesNotHaveDuplicates();
     }
 
     @Test
@@ -125,6 +125,18 @@ class WebUiIntegrationTest {
                 .contains("data.pdfCheck")
                 .contains("invisibleChars")
                 .contains("scannedLayer");
+    }
+
+    @Test
+    void telaMostraPadroesEAvisoDeVagaRepetida() throws Exception {
+        assertThat(get("/").body())
+                .contains("id=\"patterns\"")
+                .contains("id=\"patterns-list\"")
+                .contains("id=\"previous-analysis\"");
+        assertThat(get("/app.js").body())
+                .contains("/api/patterns")
+                .contains("data.previous")
+                .contains("lastCoverage");
     }
 
     private HttpResponse<String> get(String path) throws Exception {

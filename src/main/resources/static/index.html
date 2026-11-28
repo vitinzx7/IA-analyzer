@@ -84,6 +84,13 @@
             </div>
             <p id="error" class="error" role="alert" hidden></p>
         </form>
+
+        <details id="patterns" class="card patterns">
+            <summary>O que as vagas analisadas pedem <span class="hint" id="patterns-count"></span></summary>
+            <p class="hint" id="patterns-empty" hidden></p>
+            <ol id="patterns-list" class="patterns-list"></ol>
+            <p class="hint" id="patterns-unknown" hidden></p>
+        </details>
     </section>
 
     <section id="result" class="result" hidden aria-label="Resultado da análise" tabindex="-1">
@@ -96,6 +103,7 @@
             </div>
             <ul class="tally" id="tally" aria-label="Requisitos por status"></ul>
             <p class="hint" id="required-gap"></p>
+            <p id="previous-analysis" class="notice" role="status" hidden></p>
             <p id="pdf-warning" class="warning" role="alert" hidden></p>
             <details class="more">
                 <summary>Detalhes da análise</summary>

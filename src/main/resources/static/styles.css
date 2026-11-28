@@ -1037,6 +1037,87 @@ button.small[aria-pressed="true"] {
 }
 
 /* Menos movimento: so opacidade, sem deslocamento. */
+/* ---------- padroes das vagas ---------- */
+
+.patterns {
+    margin-top: 24px;
+    padding: 18px 24px;
+}
+
+.patterns summary {
+    cursor: pointer;
+    font-weight: 650;
+}
+
+.patterns summary .hint {
+    margin-left: 6px;
+    font-weight: 500;
+}
+
+.patterns-list {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.patterns-list:empty {
+    display: none;
+}
+
+.pattern {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    align-items: baseline;
+}
+
+.pattern-name {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.pattern-count {
+    color: var(--muted);
+    font-size: 0.86rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.pattern-bar {
+    position: relative;
+    grid-column: 1 / -1;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--line);
+}
+
+.pattern-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleX(var(--share, 0));
+    transform-origin: left;
+}
+
+.pattern-detail {
+    grid-column: 1 / -1;
+    color: var(--muted);
+    font-size: 0.8rem;
+}
+
+.notice {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--text);
+    font-size: 0.88rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .entry:not([hidden]),
     .result:not([hidden]) .score-card,
