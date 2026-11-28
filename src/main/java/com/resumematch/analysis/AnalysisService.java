@@ -7,6 +7,7 @@ import com.resumematch.matcher.AnalysisResult;
 import com.resumematch.matcher.ImprovementSimulator;
 import com.resumematch.matcher.JobExtraction;
 import com.resumematch.matcher.JobRequirementExtractor;
+import com.resumematch.matcher.PreviousAnalysis;
 import com.resumematch.matcher.ProfileEvidence;
 import com.resumematch.matcher.RequirementMatch;
 import com.resumematch.matcher.RequirementMatcher;
@@ -33,6 +34,7 @@ public final class AnalysisService {
     private final ScoreCalculator scoreCalculator;
     private final SummaryGenerator summaryGenerator;
     private final AnalysisLog analysisLog;
+    private final JobHistory jobHistory;
     private final ImprovementSimulator improvementSimulator;
 
     public AnalysisService(PdfTextExtractor pdfTextExtractor,
@@ -52,6 +54,18 @@ public final class AnalysisService {
             ScoreCalculator scoreCalculator,
             SummaryGenerator summaryGenerator,
             AnalysisLog analysisLog) {
+        this(pdfTextExtractor, sentenceSplitter, requirementExtractor, matcher,
+                scoreCalculator, summaryGenerator, analysisLog, JobHistory.NONE);
+    }
+
+    public AnalysisService(PdfTextExtractor pdfTextExtractor,
+            SentenceSplitter sentenceSplitter,
+            JobRequirementExtractor requirementExtractor,
+            RequirementMatcher matcher,
+            ScoreCalculator scoreCalculator,
+            SummaryGenerator summaryGenerator,
+            AnalysisLog analysisLog,
+            JobHistory jobHistory) {
         this.pdfTextExtractor = pdfTextExtractor;
         this.sentenceSplitter = sentenceSplitter;
         this.requirementExtractor = requirementExtractor;
@@ -59,6 +73,7 @@ public final class AnalysisService {
         this.scoreCalculator = scoreCalculator;
         this.summaryGenerator = summaryGenerator;
         this.analysisLog = analysisLog == null ? AnalysisLog.NONE : analysisLog;
+        this.jobHistory = jobHistory == null ? JobHistory.NONE : jobHistory;
         this.improvementSimulator = new ImprovementSimulator(matcher, scoreCalculator);
     }
 
@@ -79,9 +94,11 @@ public final class AnalysisService {
         List<RequirementMatch> matches = matcher.matchRequirements(job.requirements(), resumeText, sentences);
         double score = scoreCalculator.calculate(matches);
         String summary = summaryGenerator.generate(matches, score, job) + hiddenTextNote(pdfCheck);
+        // Consulta antes de gravar, senao a analise atual se acharia na memoria.
+        PreviousAnalysis previous = jobHistory.previous(jobText);
         AnalysisResult result = new AnalysisResult(matches.isEmpty() ? null : score, matches, summary,
                 ProfileEvidence.attach(job.unevaluated(), resumeText, sentences), job.unknownTerms(),
-                pdfCheck, improvementSimulator.simulate(matches, resumeText, sentences));
+                pdfCheck, improvementSimulator.simulate(matches, resumeText, sentences), previous);
         analysisLog.log(result, jobText);
         return result;
     }

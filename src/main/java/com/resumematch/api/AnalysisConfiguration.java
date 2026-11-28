@@ -11,7 +11,7 @@ import com.resumematch.analysis.AnalysisService;
 import com.resumematch.dictionary.TechnologyDictionary;
 import com.resumematch.feedback.FeedbackStore;
 import com.resumematch.log.AnalysisCsvLogger;
-import com.resumematch.log.JobCsvLogger;
+import com.resumematch.log.JobMemory;
 import com.resumematch.matcher.JobRequirementExtractor;
 import com.resumematch.matcher.LocalSummaryGenerator;
 import com.resumematch.matcher.RequirementMatcher;
@@ -66,10 +66,10 @@ public class AnalysisConfiguration {
     }
 
     @Bean
-    public JobCsvLogger jobCsvLogger(
+    public JobMemory jobMemory(
             @Value("${resumematch.jobs.path:vagas.csv}") String path,
             @Value("${resumematch.jobs.enabled:true}") boolean enabled) {
-        return new JobCsvLogger(Path.of(path), enabled);
+        return new JobMemory(Path.of(path), enabled);
     }
 
     @Bean
@@ -88,11 +88,11 @@ public class AnalysisConfiguration {
             ScoreCalculator scoreCalculator,
             SummaryGenerator summaryGenerator,
             AnalysisCsvLogger analysisCsvLogger,
-            JobCsvLogger jobCsvLogger) {
+            JobMemory jobMemory) {
         // Cada registro trata a propria falha, entao um nao impede o outro.
         AnalysisLog logs = (result, jobText) -> {
             analysisCsvLogger.log(result, jobText);
-            jobCsvLogger.log(result, jobText);
+            jobMemory.log(result, jobText);
         };
         return new AnalysisService(
                 pdfTextExtractor,
@@ -101,6 +101,7 @@ public class AnalysisConfiguration {
                 requirementMatcher,
                 scoreCalculator,
                 summaryGenerator,
-                logs);
+                logs,
+                jobMemory);
     }
 }

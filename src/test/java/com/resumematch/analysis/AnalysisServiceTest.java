@@ -23,6 +23,7 @@ import com.resumematch.matcher.AnalysisResult;
 import com.resumematch.matcher.JobRequirementExtractor;
 import com.resumematch.matcher.LocalSummaryGenerator;
 import com.resumematch.matcher.MatchStatus;
+import com.resumematch.matcher.PreviousAnalysis;
 import com.resumematch.matcher.RequirementMatcher;
 import com.resumematch.matcher.RequirementPriority;
 import com.resumematch.matcher.ScoreCalculator;
@@ -206,6 +207,24 @@ class AnalysisServiceTest {
         loggedService.analyze("Desenvolvi uma API em Java.", "Requisitos: Java e SQL.");
 
         assertThat(jobs).containsExactly("Requisitos: Java e SQL.");
+    }
+
+    @Test
+    void consultaAMemoriaAntesDeGravarAAnaliseAtual() {
+        List<String> saved = new ArrayList<>();
+        AnalysisService memoryService = new AnalysisService(
+                new PdfTextExtractor(), new SentenceSplitter(),
+                new JobRequirementExtractor(new TechnologyDictionary()),
+                new RequirementMatcher(new TechnologyDictionary()),
+                new ScoreCalculator(), new LocalSummaryGenerator(),
+                (result, jobText) -> saved.add(jobText),
+                jobText -> saved.contains(jobText) ? new PreviousAnalysis(1, "2026-11-28 10:00:00", 50.0) : null);
+
+        AnalysisResult first = memoryService.analyze("Desenvolvi uma API em Java.", "Java");
+        AnalysisResult second = memoryService.analyze("Desenvolvi uma API em Java.", "Java");
+
+        assertThat(first.previous()).isNull();
+        assertThat(second.previous()).isEqualTo(new PreviousAnalysis(1, "2026-11-28 10:00:00", 50.0));
     }
 
     @Test

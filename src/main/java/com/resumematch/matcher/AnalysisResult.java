@@ -15,16 +15,24 @@ import com.resumematch.pdf.HiddenTextReport;
  * @param pdfCheck texto escondido achado no PDF; null quando o curriculo veio
  *        como texto colado
  * @param improvement simulacao de melhora; nunca altera o score
+ * @param previous analises anteriores da mesma vaga; null quando e a primeira
+ *        ou quando a memoria de vagas esta desligada
  */
 public record AnalysisResult(Double score, List<RequirementMatch> requirements, String summary,
         List<UnevaluatedItem> unevaluated, List<String> unknownTerms, HiddenTextReport pdfCheck,
-        ImprovementSimulation improvement) {
+        ImprovementSimulation improvement, PreviousAnalysis previous) {
 
     public AnalysisResult {
         requirements = List.copyOf(requirements);
         unevaluated = unevaluated == null ? List.of() : List.copyOf(unevaluated);
         unknownTerms = unknownTerms == null ? List.of() : List.copyOf(unknownTerms);
         improvement = improvement == null ? ImprovementSimulation.EMPTY : improvement;
+    }
+
+    public AnalysisResult(Double score, List<RequirementMatch> requirements, String summary,
+            List<UnevaluatedItem> unevaluated, List<String> unknownTerms, HiddenTextReport pdfCheck,
+            ImprovementSimulation improvement) {
+        this(score, requirements, summary, unevaluated, unknownTerms, pdfCheck, improvement, null);
     }
 
     public AnalysisResult(Double score, List<RequirementMatch> requirements, String summary,
