@@ -187,6 +187,12 @@ data,chave,cargo,empresa,local,link,cobertura,obrigatorios_atendidos,obrigatorio
 - **termos_desconhecidos:** nomes que parecem tecnologia mas o dicionário não
   conhece; servem para saber o que falta cadastrar.
 
+Na tela de entrada, o painel **O que as vagas analisadas pedem** conta, para
+cada requisito, em quantas vagas diferentes ele aparece e se é obrigatório ou
+diferencial (`GET /api/patterns`). Cada vaga conta uma vez, pela análise mais
+recente. Ao analisar uma vaga que já está na memória, o resumo avisa quantas
+vezes ela foi analisada, quando foi a última e quanto a cobertura mudou.
+
 O arquivo é local, está no `.gitignore` e não guarda trecho do currículo.
 Para desligar ou mudar o caminho:
 

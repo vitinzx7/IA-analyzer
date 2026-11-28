@@ -412,6 +412,11 @@ usa o identificador de análise gerado pela tela, que não vai para o
 `vagas.csv`, então ainda não dá para ligar uma marcação de certo ou errado à
 vaga em que ela foi feita.
 
+Os padrões e o aviso de vaga repetida da D24 herdam esses buracos: duas chaves
+para a mesma vaga contam como duas vagas, e o aviso não aparece. Os dois leem o
+arquivo inteiro a cada chamada, o que fica mais lento conforme ele cresce; não
+foi medido com quantas linhas isso passa a ser notado.
+
 Ligado à L23: o cargo faz parte do texto analisado, então o que estiver no
 título também vira requisito. No teste manual do bloco, "Analista/Desenvolvedor
 Java (Web e Back-end)" fez Back-end aparecer como obrigatório faltando, embora

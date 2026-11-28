@@ -697,7 +697,7 @@ Os ids que a API e os testes usam continuam os mesmos. Nada mudou no servidor.
 
 ## D23 — Memória de vagas em CSV local
 
-Implementado em `JobHeader`, `JobCsvLogger`, `CsvFiles` e `AnalysisConfiguration`.
+Implementado em `JobHeader`, `JobMemory`, `CsvFiles` e `AnalysisConfiguration`.
 
 Problema real: o `analises.csv` grava uma linha por requisito, mas não diz de
 qual vaga ela veio nem qual foi a cobertura. Com ele dá para contar quantas
@@ -733,6 +733,35 @@ passou a receber o texto da vaga junto com o resultado, e os dois registros
 rodam um depois do outro, cada um tratando a própria falha. A escrita com
 cabeçalho, que estava dentro do `AnalysisCsvLogger`, foi para `CsvFiles` e é
 usada pelos dois.
+
+---
+
+## D24 — Padrões das vagas e aviso de vaga repetida
+
+Implementado em `JobMemory`, `JobPatterns`, `PreviousAnalysis`, `JobHistory`,
+`JobPatternsController` e `app.js`.
+
+Problema real: a memória da D23 só servia aberta numa planilha. Faltava
+responder, dentro do programa, o que as vagas mais pedem e se a vaga colada
+já tinha sido analisada.
+
+**O que mais pedem** (`GET /api/patterns`, painel "O que as vagas analisadas
+pedem" na tela de entrada). Conta só a análise mais recente de cada chave, para
+a mesma vaga analisada três vezes contar uma. Para cada requisito, diz em
+quantas vagas ele aparece, em quantas é obrigatório e em quantas é só
+diferencial; se aparece nas duas listas da mesma vaga, conta como obrigatório.
+A ordem é do mais pedido ao menos pedido, com empate em ordem alfabética. A tela
+mostra os 15 primeiros e os 10 termos desconhecidos mais vistos.
+
+**Vaga repetida** (`previous` na resposta da análise, aviso no resumo). O
+serviço consulta a memória **antes** de gravar a análise atual, senão ela se
+acharia. A resposta traz quantas vezes a vaga já foi analisada, a data e a
+cobertura da última; a tela mostra a diferença para a cobertura de agora.
+
+Gravar e ler ficam na mesma classe, `JobMemory` (antes `JobCsvLogger`), para
+usar a mesma trava: a leitura nunca pega uma linha pela metade. Linha com
+número errado de colunas é pulada com aviso no log. Com a memória desligada, a
+análise não traz `previous` e `/api/patterns` responde `enabled: false`.
 
 ---
 
