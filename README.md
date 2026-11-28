@@ -168,6 +168,33 @@ resumematch.csv.enabled=false
 resumematch.csv.path=/caminho/analises.csv
 ```
 
+## Memória de vagas
+
+Cada análise também grava **uma linha por vaga** em `vagas.csv`, para comparar
+vagas e procurar padrões, como o que mais pedem ou o que mais falta no
+currículo:
+
+```csv
+data,chave,cargo,empresa,local,link,cobertura,obrigatorios_atendidos,obrigatorios_parciais,obrigatorios_faltando,diferenciais_atendidos,diferenciais_parciais,diferenciais_faltando,termos_desconhecidos
+2026-11-28 15:12:24,linkedin:4484297425,Desenvolvedor Java,Empresa Exemplo,"Brasília, DF · Híbrido",https://www.linkedin.com/jobs/view/4484297425/,50.0,Java; Spring Boot,SQL; Git,Back-end,,,Docker; AWS,
+```
+
+- **chave:** o número da vaga quando o texto tem link do LinkedIn; sem link, um
+  resumo (SHA-256) do texto. A mesma vaga analisada de novo ganha outra linha
+  com a mesma chave.
+- **cargo, empresa, local:** lidos só quando o texto começa com essas linhas
+  seguidas do link sozinho numa linha. Fora desse formato ficam vazios.
+- **termos_desconhecidos:** nomes que parecem tecnologia mas o dicionário não
+  conhece; servem para saber o que falta cadastrar.
+
+O arquivo é local, está no `.gitignore` e não guarda trecho do currículo.
+Para desligar ou mudar o caminho:
+
+```properties
+resumematch.jobs.enabled=false
+resumematch.jobs.path=/caminho/vagas.csv
+```
+
 ## Texto escondido no PDF
 
 Ao ler o PDF, o programa olha como cada letra é desenhada (D20). Texto em modo
@@ -285,7 +312,8 @@ resumematch.feedback.path=/caminho/feedback.csv
 ## Privacidade
 
 - O currículo enviado não é salvo pela aplicação.
-- O CSV de análise fica na máquina e está ignorado pelo Git.
+- O CSV de análise e a memória de vagas ficam na máquina e estão ignorados
+  pelo Git. A memória de vagas não guarda trecho do currículo.
 - Nenhum texto é enviado para serviços externos.
 
 ## Testes

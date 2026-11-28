@@ -695,6 +695,47 @@ Os ids que a API e os testes usam continuam os mesmos. Nada mudou no servidor.
 
 ---
 
+## D23 — Memória de vagas em CSV local
+
+Implementado em `JobHeader`, `JobCsvLogger`, `CsvFiles` e `AnalysisConfiguration`.
+
+Problema real: o `analises.csv` grava uma linha por requisito, mas não diz de
+qual vaga ela veio nem qual foi a cobertura. Com ele dá para contar quantas
+vezes "SQL" apareceu, mas não em quantas vagas diferentes, nem comparar vagas.
+
+Regra: cada análise concluída grava **uma linha** em `vagas.csv` com data e
+hora, chave da vaga, cargo, empresa, local, link, cobertura, seis listas de
+requisitos (obrigatórios e diferenciais, cada um em atendidos, parciais e
+faltando) e os termos que o dicionário não conhece. Os itens de uma lista são
+separados por `; `. Nenhum trecho do currículo entra no arquivo.
+
+Chave da vaga:
+
+```
+link de vaga do LinkedIn no texto   -> linkedin:<número da vaga>
+sem link                            -> texto:<16 primeiros hex do SHA-256 do texto>
+```
+
+O texto vai para o SHA-256 em minúsculas e com os espaços juntados, para que a
+mesma vaga colada de novo caia na mesma chave. A mesma vaga analisada outra vez
+ganha outra linha com a mesma chave, porque a cobertura muda quando o currículo
+muda. Quem contar padrões decide se usa só a linha mais recente de cada chave.
+
+Cargo, empresa e local só são lidos quando o link está sozinho numa linha e
+antes dele há duas ou três linhas curtas (até 150 caracteres): cargo, empresa
+e, se houver, local. Com uma linha só, ou com mais de três, os três campos
+ficam vazios. Adivinhar o cargo pela primeira linha de uma vaga colada à mão
+erraria com frequência, e campo vazio é melhor que campo errado.
+
+O registro é ligado e desligado à parte do `analises.csv`
+(`resumematch.jobs.enabled`, `resumematch.jobs.path`). Para isso, `AnalysisLog`
+passou a receber o texto da vaga junto com o resultado, e os dois registros
+rodam um depois do outro, cada um tratando a própria falha. A escrita com
+cabeçalho, que estava dentro do `AnalysisCsvLogger`, foi para `CsvFiles` e é
+usada pelos dois.
+
+---
+
 ## Observações do texto real (Bloco 1)
 
 Extraídas de um único currículo real, 3050 caracteres, coluna única. Sustentam

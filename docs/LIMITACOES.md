@@ -393,6 +393,32 @@ obrigatórios. A causa é a mesma: só agrupa o que a lista de famílias conhece
 
 ---
 
+## L25 — Memória de vagas reconhece a vaga só pelo link ou pelo texto igual · ABERTA
+
+A chave da D23 tem três buracos conhecidos:
+
+- a mesma vaga colada uma vez com o link e outra sem ele vira duas chaves
+  (`linkedin:` e `texto:`);
+- sem link, qualquer mudança no texto além de espaço e maiúscula muda a chave;
+  um parágrafo a mais já basta;
+- a mesma vaga publicada em outro site, ou republicada no LinkedIn com outro
+  número, também vira outra chave.
+
+Cargo, empresa e local só aparecem no formato com cabeçalho seguido do link
+sozinho numa linha. Vaga de outro site fica com os três campos vazios.
+
+O arquivo só cresce: não há limpeza nem limite de tamanho. E o `feedback.csv`
+usa o identificador de análise gerado pela tela, que não vai para o
+`vagas.csv`, então ainda não dá para ligar uma marcação de certo ou errado à
+vaga em que ela foi feita.
+
+Ligado à L23: o cargo faz parte do texto analisado, então o que estiver no
+título também vira requisito. No teste manual do bloco, "Analista/Desenvolvedor
+Java (Web e Back-end)" fez Back-end aparecer como obrigatório faltando, embora
+os requisitos da vaga fossem só Java, Spring Boot, SQL e Git.
+
+---
+
 ## L16 — Tempo quadrático em texto com muitas repetições · RESOLVIDA
 
 O matcher avaliava o verbo da frase inteira uma vez para cada ocorrência do
