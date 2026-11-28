@@ -6,10 +6,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.resumematch.analysis.AnalysisLog;
 import com.resumematch.analysis.AnalysisService;
 import com.resumematch.dictionary.TechnologyDictionary;
 import com.resumematch.feedback.FeedbackStore;
 import com.resumematch.log.AnalysisCsvLogger;
+import com.resumematch.log.JobCsvLogger;
 import com.resumematch.matcher.JobRequirementExtractor;
 import com.resumematch.matcher.LocalSummaryGenerator;
 import com.resumematch.matcher.RequirementMatcher;
@@ -64,6 +66,13 @@ public class AnalysisConfiguration {
     }
 
     @Bean
+    public JobCsvLogger jobCsvLogger(
+            @Value("${resumematch.jobs.path:vagas.csv}") String path,
+            @Value("${resumematch.jobs.enabled:true}") boolean enabled) {
+        return new JobCsvLogger(Path.of(path), enabled);
+    }
+
+    @Bean
     public FeedbackStore feedbackStore(
             @Value("${resumematch.feedback.path:feedback.csv}") String path,
             @Value("${resumematch.feedback.enabled:true}") boolean enabled) {
@@ -78,7 +87,13 @@ public class AnalysisConfiguration {
             RequirementMatcher requirementMatcher,
             ScoreCalculator scoreCalculator,
             SummaryGenerator summaryGenerator,
-            AnalysisCsvLogger analysisCsvLogger) {
+            AnalysisCsvLogger analysisCsvLogger,
+            JobCsvLogger jobCsvLogger) {
+        // Cada registro trata a propria falha, entao um nao impede o outro.
+        AnalysisLog logs = (result, jobText) -> {
+            analysisCsvLogger.log(result, jobText);
+            jobCsvLogger.log(result, jobText);
+        };
         return new AnalysisService(
                 pdfTextExtractor,
                 sentenceSplitter,
@@ -86,6 +101,6 @@ public class AnalysisConfiguration {
                 requirementMatcher,
                 scoreCalculator,
                 summaryGenerator,
-                analysisCsvLogger);
+                logs);
     }
 }
