@@ -82,7 +82,7 @@ public final class AnalysisService {
         AnalysisResult result = new AnalysisResult(matches.isEmpty() ? null : score, matches, summary,
                 ProfileEvidence.attach(job.unevaluated(), resumeText, sentences), job.unknownTerms(),
                 pdfCheck, improvementSimulator.simulate(matches, resumeText, sentences));
-        analysisLog.log(result);
+        analysisLog.log(result, jobText);
         return result;
     }
 

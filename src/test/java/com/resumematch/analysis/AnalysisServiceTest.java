@@ -190,7 +190,7 @@ class AnalysisServiceTest {
     @Test
     void registraResultadoNoLog() {
         List<AnalysisResult> logged = new ArrayList<>();
-        AnalysisService loggedService = service(logged::add);
+        AnalysisService loggedService = service((result, jobText) -> logged.add(result));
 
         loggedService.analyze("Desenvolvi uma API em Java.", "Java");
 
@@ -199,9 +199,19 @@ class AnalysisServiceTest {
     }
 
     @Test
+    void logRecebeOTextoDaVaga() {
+        List<String> jobs = new ArrayList<>();
+        AnalysisService loggedService = service((result, jobText) -> jobs.add(jobText));
+
+        loggedService.analyze("Desenvolvi uma API em Java.", "Requisitos: Java e SQL.");
+
+        assertThat(jobs).containsExactly("Requisitos: Java e SQL.");
+    }
+
+    @Test
     void logRecebeEvidenciaSemDadoDeContato() {
         List<AnalysisResult> logged = new ArrayList<>();
-        AnalysisService loggedService = service(logged::add);
+        AnalysisService loggedService = service((result, jobText) -> logged.add(result));
 
         loggedService.analyze("Victor | Desenvolvedor Java | victor@email.com", "Java");
 

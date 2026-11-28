@@ -30,7 +30,7 @@ class AnalysisCsvLoggerTest {
         logger.log(result(
                 new RequirementMatch("Java", MatchStatus.MATCH, "Desenvolvi uma API com Java."),
                 new RequirementMatch("Docker", MatchStatus.PARTIAL, "Tecnologias: Docker."),
-                new RequirementMatch("AWS", MatchStatus.MISSING, null)));
+                new RequirementMatch("AWS", MatchStatus.MISSING, null)), "Java, Docker, AWS");
 
         List<String> lines = Files.readAllLines(file);
         assertThat(lines).hasSize(4);
@@ -46,8 +46,8 @@ class AnalysisCsvLoggerTest {
         AnalysisCsvLogger logger = new AnalysisCsvLogger(file, true);
         RequirementMatch match = new RequirementMatch("Java", MatchStatus.MATCH, "Desenvolvi.");
 
-        logger.log(result(match));
-        logger.log(result(match));
+        logger.log(result(match), "Java");
+        logger.log(result(match), "Java");
 
         List<String> lines = Files.readAllLines(file);
         assertThat(lines).hasSize(3);
@@ -60,7 +60,7 @@ class AnalysisCsvLoggerTest {
         AnalysisCsvLogger logger = new AnalysisCsvLogger(file, true);
 
         logger.log(result(new RequirementMatch("Java", MatchStatus.MATCH,
-                "Desenvolvi \"API\", com Java.")));
+                "Desenvolvi \"API\", com Java.")), "Java");
 
         assertThat(Files.readString(file))
                 .contains("\"Desenvolvi \"\"API\"\", com Java.\"");
@@ -71,7 +71,7 @@ class AnalysisCsvLoggerTest {
         Path file = tempDir.resolve("analises.csv");
         AnalysisCsvLogger logger = new AnalysisCsvLogger(file, false);
 
-        logger.log(result(new RequirementMatch("Java", MatchStatus.MATCH, "Desenvolvi.")));
+        logger.log(result(new RequirementMatch("Java", MatchStatus.MATCH, "Desenvolvi.")), "Java");
 
         assertThat(Files.exists(file)).isFalse();
     }
@@ -81,7 +81,7 @@ class AnalysisCsvLoggerTest {
         Path file = tempDir.resolve("sub/dir/analises.csv");
         AnalysisCsvLogger logger = new AnalysisCsvLogger(file, true);
 
-        logger.log(result(new RequirementMatch("Java", MatchStatus.MATCH, "Desenvolvi.")));
+        logger.log(result(new RequirementMatch("Java", MatchStatus.MATCH, "Desenvolvi.")), "Java");
 
         assertThat(Files.exists(file)).isTrue();
     }
@@ -91,7 +91,7 @@ class AnalysisCsvLoggerTest {
         Path file = tempDir.resolve("analises.csv");
         AnalysisCsvLogger logger = new AnalysisCsvLogger(file, true);
 
-        logger.log(result(new RequirementMatch("Java", MatchStatus.PARTIAL, "=HYPERLINK(\"http://x\",\"Java\")")));
+        logger.log(result(new RequirementMatch("Java", MatchStatus.PARTIAL, "=HYPERLINK(\"http://x\",\"Java\")")), "Java");
 
         assertThat(Files.readString(file))
                 .contains(",\"'=HYPERLINK(\"\"http://x\"\",\"\"Java\"\")\"");

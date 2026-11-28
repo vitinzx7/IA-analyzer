@@ -1,11 +1,6 @@
 package com.resumematch.log;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 
 import org.slf4j.Logger;
@@ -35,46 +30,22 @@ public final class AnalysisCsvLogger implements AnalysisLog {
     }
 
     @Override
-    public synchronized void log(AnalysisResult result) {
+    public synchronized void log(AnalysisResult result, String jobText) {
         if (!enabled || result == null) {
             return;
         }
         try {
-            createParentDirectory();
-            StringBuilder content = new StringBuilder();
-            if (!Files.exists(path) || Files.size(path) == 0) {
-                content.append(HEADER).append('\n');
-            } else if (!endsWithNewline()) {
-                content.append('\n');
-            }
             String date = LocalDate.now().toString();
+            StringBuilder rows = new StringBuilder();
             for (RequirementMatch requirement : result.requirements()) {
-                content.append(csv(date)).append(',')
+                rows.append(csv(date)).append(',')
                         .append(csv(requirement.name())).append(',')
                         .append(csv(requirement.status().name())).append(',')
                         .append(csv(requirement.evidence())).append('\n');
             }
-            Files.writeString(path, content.toString(), StandardCharsets.UTF_8,
-                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            CsvFiles.append(path, HEADER, rows.toString());
         } catch (Exception e) {
             LOG.warn("Nao foi possivel gravar o CSV de analises em {}", path, e);
-        }
-    }
-
-    private void createParentDirectory() throws IOException {
-        Path parent = path.toAbsolutePath().getParent();
-        if (parent != null) {
-            Files.createDirectories(parent);
-        }
-    }
-
-    private boolean endsWithNewline() throws IOException {
-        try (RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")) {
-            if (file.length() == 0) {
-                return true;
-            }
-            file.seek(file.length() - 1);
-            return file.read() == '\n';
         }
     }
 

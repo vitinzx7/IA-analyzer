@@ -9,8 +9,11 @@ import com.resumematch.matcher.AnalysisResult;
  */
 public interface AnalysisLog {
 
-    AnalysisLog NONE = result -> {
+    AnalysisLog NONE = (result, jobText) -> {
     };
 
-    void log(AnalysisResult result);
+    /**
+     * @param jobText descricao da vaga como chegou na analise
+     */
+    void log(AnalysisResult result, String jobText);
 }
